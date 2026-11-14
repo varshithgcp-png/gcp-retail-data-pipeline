@@ -8,6 +8,9 @@ Phase 5 connects the batch components created in Phases 2-4 into one production-
 GCS Sensors
     |
     v
+File Validation
+    |
+    v
 Replay Cleanup
     |
     v
@@ -34,6 +37,7 @@ GCS Archive
 The DAG uses:
 
 - `GCSObjectsWithPrefixExistenceSensor`
+- `PythonOperator` for file naming/extension/size/header validation
 - `BeamRunPythonPipelineOperator`
 - `BigQueryInsertJobOperator` for replay cleanup
 - `BigQueryCheckOperator`
@@ -109,7 +113,7 @@ Use the example in:
 dbt/profiles.yml.example
 ```
 
-The credential file must be stored securely and must not be committed to the repository.
+The example profile uses OAuth/ADC, so a service-account JSON key is not required. The Composer runtime identity must have the required BigQuery permissions.
 
 ## 5. Landing Path
 
@@ -140,11 +144,11 @@ For an explicit replay, trigger the DAG with:
 }
 ```
 
-Before reprocessing a batch, Composer removes prior stage/quarantine/audit rows for the same batch ID. Dataproc also clears prior work/reject rows for that batch. Curated dimensions/facts use SCD2/MERGE logic, so the workflow is designed for replay-safe processing.
+Before reprocessing a batch, Composer removes prior stage/quarantine/audit rows for the same batch ID. Dataproc also clears prior work/reject rows for that batch. Dimension SCD2 rebuilds affected business-key history from retained work records, and facts use MERGE. If a historical dimension backfill changes version boundaries, rerun the impacted fact business dates so their surrogate keys are refreshed.
 
 ## 8. Failure Behaviour
 
-If a sensor times out, Dataflow fails, stage validation returns false, Dataproc fails, reconciliation reports a mismatch, or dbt tests fail, downstream archive tasks do not execute.
+If a sensor times out, file validation fails, Dataflow fails, stage validation returns false, Dataproc fails, reconciliation reports a mismatch, or dbt tests fail, downstream archive tasks do not execute.
 
 This leaves source files in the landing path for investigation and rerun.
 
