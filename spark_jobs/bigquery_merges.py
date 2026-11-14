@@ -172,7 +172,11 @@ USING (
   WHERE w.batch_id = @batch_id
 ) s
 ON t.purchase_id = s.purchase_id
-WHEN MATCHED AND t.record_hash != s.record_hash THEN UPDATE SET
+WHEN MATCHED AND (
+  t.record_hash IS DISTINCT FROM s.record_hash
+  OR t.customer_sk IS DISTINCT FROM s.customer_sk
+  OR t.product_sk IS DISTINCT FROM s.product_sk
+) THEN UPDATE SET
   customer_sk=s.customer_sk, product_sk=s.product_sk,
   customer_id=s.customer_id, product_id=s.product_id,
   recommended_size=s.recommended_size, purchased_size=s.purchased_size,
@@ -204,7 +208,11 @@ USING (
   WHERE w.batch_id = @batch_id
 ) s
 ON t.return_id = s.return_id
-WHEN MATCHED AND t.record_hash != s.record_hash THEN UPDATE SET
+WHEN MATCHED AND (
+  t.record_hash IS DISTINCT FROM s.record_hash
+  OR t.customer_sk IS DISTINCT FROM s.customer_sk
+  OR t.product_sk IS DISTINCT FROM s.product_sk
+) THEN UPDATE SET
   purchase_id=s.purchase_id, customer_sk=s.customer_sk, product_sk=s.product_sk,
   customer_id=s.customer_id, product_id=s.product_id,
   return_reason=s.return_reason, fit_feedback=s.fit_feedback,
@@ -237,7 +245,11 @@ USING (
   WHERE w.batch_id = @batch_id
 ) s
 ON t.recommendation_id = s.recommendation_id
-WHEN MATCHED AND t.record_hash != s.record_hash THEN UPDATE SET
+WHEN MATCHED AND (
+  t.record_hash IS DISTINCT FROM s.record_hash
+  OR t.customer_sk IS DISTINCT FROM s.customer_sk
+  OR t.product_sk IS DISTINCT FROM s.product_sk
+) THEN UPDATE SET
   customer_sk=s.customer_sk, product_sk=s.product_sk,
   customer_id=s.customer_id, product_id=s.product_id,
   recommended_size=s.recommended_size, confidence_score=s.confidence_score,
