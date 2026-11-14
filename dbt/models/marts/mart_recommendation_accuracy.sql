@@ -7,7 +7,7 @@
 
 with recommendations as (
   select *
-  from {{ ref('stg_fact_recommendation') }}
+  from {{ ref('stg_recommendation_unified') }}
 ),
 
 purchases as (
@@ -24,6 +24,7 @@ candidate_matches as (
   select
     r.recommendation_id,
     r.event_id,
+    r.recommendation_source,
     r.customer_id,
     r.product_id,
     r.product_sk,
@@ -34,7 +35,7 @@ candidate_matches as (
     p.purchased_size,
     p.purchase_date,
     row_number() over (
-      partition by r.recommendation_id
+      partition by r.event_id
       order by p.purchase_date asc, p.purchase_id asc
     ) as rn
   from recommendations r
@@ -45,7 +46,7 @@ candidate_matches as (
    and p.purchase_date < date_add(date(r.recommendation_ts), interval 30 day)
 ),
 
-latest as (
+attributed as (
   select *
   from candidate_matches
   where rn = 1
@@ -57,15 +58,19 @@ select
   dp.brand,
   dp.category,
   count(*) as recommendation_count,
+  countif(r.recommendation_source = 'streaming') as streaming_recommendation_count,
   countif(r.purchase_id is not null) as recommendations_with_purchase,
-  countif(r.purchase_id is not null and r.recommended_size = r.purchased_size) as correct_size_purchase_count,
+  countif(
+    r.purchase_id is not null
+    and r.recommended_size = r.purchased_size
+  ) as correct_size_purchase_count,
   {{ safe_rate(
     "countif(r.purchase_id is not null and r.recommended_size = r.purchased_size)",
     "countif(r.purchase_id is not null)"
   ) }} as recommendation_accuracy,
   avg(r.confidence_score) as avg_confidence_score,
   current_timestamp() as dbt_updated_at
-from latest r
+from attributed r
 join products dp
   on r.product_sk = dp.product_sk
 group by 1,2,3,4
