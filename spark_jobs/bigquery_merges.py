@@ -69,10 +69,10 @@ USING (
   FROM `{project}.fitanalytics_history.wrk_purchase` w
   JOIN `{project}.fitanalytics_curated.dim_customer` c
     ON c.customer_id = w.customer_id
-   AND TIMESTAMP(w.purchase_date) BETWEEN c.effective_start_ts AND c.effective_end_ts
+   AND w.purchase_date BETWEEN DATE(c.effective_start_ts) AND DATE(c.effective_end_ts)
   JOIN `{project}.fitanalytics_curated.dim_product` p
     ON p.product_id = w.product_id
-   AND TIMESTAMP(w.purchase_date) BETWEEN p.effective_start_ts AND p.effective_end_ts
+   AND w.purchase_date BETWEEN DATE(p.effective_start_ts) AND DATE(p.effective_end_ts)
   WHERE w.batch_id = @batch_id
 ) s
 ON t.purchase_id = s.purchase_id
@@ -101,10 +101,10 @@ USING (
   FROM `{project}.fitanalytics_history.wrk_return` w
   JOIN `{project}.fitanalytics_curated.dim_customer` c
     ON c.customer_id = w.customer_id
-   AND TIMESTAMP(w.return_date) BETWEEN c.effective_start_ts AND c.effective_end_ts
+   AND w.return_date BETWEEN DATE(c.effective_start_ts) AND DATE(c.effective_end_ts)
   JOIN `{project}.fitanalytics_curated.dim_product` p
     ON p.product_id = w.product_id
-   AND TIMESTAMP(w.return_date) BETWEEN p.effective_start_ts AND p.effective_end_ts
+   AND w.return_date BETWEEN DATE(p.effective_start_ts) AND DATE(p.effective_end_ts)
   WHERE w.batch_id = @batch_id
 ) s
 ON t.return_id = s.return_id
