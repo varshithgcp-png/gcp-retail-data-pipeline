@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS `PROJECT_ID.fitanalytics_audit.reconciliation_audit` 
   stage_count INT64,
   valid_count INT64,
   rejected_count INT64,
+  duplicate_count INT64,
   target_count INT64,
   reconciliation_status STRING,
   audit_ts TIMESTAMP
