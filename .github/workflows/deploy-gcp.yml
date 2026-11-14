@@ -55,6 +55,9 @@ jobs:
           gcloud storage cp setup.py "$DEST/setup.py"
           gcloud storage cp requirements.txt "$DEST/requirements.txt"
 
+          PROFILE_DEST="gs://${{ steps.composer.outputs.env_bucket }}/data/dbt_profiles"
+          gcloud storage cp dbt/profiles.yml.example "$PROFILE_DEST/profiles.yml"
+
       - name: Deploy Composer DAG
         run: |
           gcloud composer environments storage dags import             --environment="${{ vars.COMPOSER_ENVIRONMENT }}"             --location="${{ vars.COMPOSER_LOCATION }}"             --source="airflow/fitanalytics_batch_dag.py"
