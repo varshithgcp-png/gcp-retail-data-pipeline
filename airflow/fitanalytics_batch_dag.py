@@ -85,7 +85,12 @@ BUSINESS_DATE = (
     "data_interval_end.in_timezone('Asia/Kolkata').strftime('%Y-%m-%d')"
     ") }}"
 )
-BATCH_ID = "{{ dag_run.conf.get('batch_id', ts_nodash) }}"
+BATCH_ID = (
+    "{{ dag_run.conf.get("
+    "'batch_id', "
+    "data_interval_end.in_timezone('Asia/Kolkata').strftime('%Y%m%dT%H%M%S')"
+    ") }}"
+)
 
 ENTITY_TABLES = {
     "customer": "stg_customer",
@@ -386,6 +391,7 @@ with DAG(
             destination_bucket=GCS_BUCKET,
             destination_object=(
                 f"archive/{entity}/business_date={BUSINESS_DATE}/"
+                f"batch_id={BATCH_ID}/"
             ),
             move_object=True,
             replace=True,
