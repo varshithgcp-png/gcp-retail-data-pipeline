@@ -85,6 +85,7 @@ Security: IAM, Service Accounts, RLS/CLS
 | `fitanalytics_curated` | Dimensions and fact tables |
 | `fitanalytics_audit` | Pipeline audit and quarantine records |
 | `fitanalytics_reporting` | Analytics views and KPI outputs |
+| `fitanalytics_streaming` | Real-time recommendation events and window metrics |
 
 ## Main Tables
 
@@ -135,7 +136,8 @@ Security: IAM, Service Accounts, RLS/CLS
 ```text
 gcp-retail-data-pipeline/
 ├── data/             # Synthetic customer/product/purchase/return/recommendation files
-├── dataflow/         # Apache Beam ingestion pipelines
+├── dataflow/         # Apache Beam batch ingestion pipelines
+├── streaming/        # Pub/Sub -> Dataflow real-time recommendation pipeline
 ├── spark_jobs/       # Dataproc/PySpark dedupe, SCD2, facts and audit logic
 ├── airflow/          # Cloud Composer orchestration
 ├── bigquery/         # DDL, MERGE and KPI SQL
@@ -153,5 +155,5 @@ gcp-retail-data-pipeline/
 - Phase 3: ✅ PySpark transformation + SCD Type 2 + reconciliation
 - Phase 4: ✅ dbt KPI marts, tests and reporting transformations
 - Phase 5: ✅ Cloud Composer / Airflow orchestration
-- Phase 6: Pub/Sub streaming pipeline
+- Phase 6: ✅ Pub/Sub + Dataflow real-time streaming pipeline
 - Phase 7: Reporting KPIs, optimization and final architecture
