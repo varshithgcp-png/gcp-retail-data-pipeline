@@ -30,6 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pytest google-cloud-pubsub
           python -m pip install "apache-beam[gcp]>=2.60.0,<3.0.0"
+          python -m pip install "pyspark>=3.5.0,<4.0.0"
           python -m pip install -e .
 
       - name: Python syntax validation
@@ -43,6 +44,10 @@ jobs:
       - name: Streaming validation unit tests
         run: |
           python -m pytest -q tests/test_streaming_validation.py
+
+      - name: Spark transformation regression tests
+        run: |
+          python -m pytest -q tests/test_spark_transformations.py
 
       - name: Synthetic use-case contract tests
         run: |
