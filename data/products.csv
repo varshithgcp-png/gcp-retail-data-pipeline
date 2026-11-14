@@ -1,0 +1,6 @@
+product_id,product_name,category,brand,unit_price,updated_at
+501,Classic T-Shirt,Tops,Northstar,999.00,2026-11-01T07:00:00
+502,Slim Fit Jeans,Bottoms,UrbanLine,2499.00,2026-11-01T07:00:00
+503,Running Shoes,Footwear,Stride,3999.00,2026-11-01T07:00:00
+504,Winter Jacket,Outerwear,Northstar,5999.00,2026-11-01T07:00:00
+505,Casual Shirt,Tops,UrbanLine,1799.00,2026-11-01T07:00:00
