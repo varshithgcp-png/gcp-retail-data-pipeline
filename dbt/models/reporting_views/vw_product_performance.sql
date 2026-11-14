@@ -11,11 +11,5 @@ select
   {{ safe_rate('sum(fit_return_count)', 'sum(purchase_count)') }} as fit_related_return_rate,
   {{ safe_rate('sum(recommendation_match_count)', 'sum(purchase_count)') }}
     as recommendation_acceptance_rate
-from (
-  select
-    *,
-    cast(round(recommendation_acceptance_rate * purchase_count) as int64)
-      as recommendation_match_count
-  from {{ ref('mart_product_fit_performance') }}
-)
+from {{ ref('mart_product_fit_performance') }}
 group by 1,2,3,4
