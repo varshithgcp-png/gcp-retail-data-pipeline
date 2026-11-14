@@ -57,9 +57,16 @@ The payload and attributes must match.
 
 ## Why Attributes Are Used
 
-The Pub/Sub source uses `id_label="event_id"` for logical retry deduplication.
+The Pub/Sub source uses:
 
-The pipeline deliberately validates `event_ts` in application code before assigning it as the Beam element timestamp. This means malformed timestamps can be routed to the explicit DLQ instead of failing inside the Pub/Sub source transform. Valid events are emitted as `TimestampedValue` records, so fixed-window logic still runs on event time.
+```python
+id_label="event_id"
+timestamp_attribute="event_ts"
+```
+
+The stable `event_id` is used for logical retry deduplication. The `event_ts` message attribute is the transport-level event-time contract, and Dataflow uses it for source watermark estimation and event-time windows.
+
+The application also validates that the payload `event_ts` matches the Pub/Sub attribute. A malformed **timestamp attribute itself** is a publisher-contract violation and can fail before application-level DLQ routing, so publishers must always send a valid RFC3339 timestamp attribute. Business-payload validation errors are still routed to the explicit DLQ.
 
 ## Dedupe Strategy
 
@@ -253,5 +260,6 @@ Because the source uses a Pub/Sub event-time timestamp attribute, Dataflow can c
 - Keep `event_ts` in RFC3339 UTC format.
 - Monitor Pub/Sub backlog and Dataflow watermark lag.
 - The sample late event is an out-of-order event candidate; whether it is emitted in a late pane depends on actual watermark progression at runtime.
+- Keep the Dataflow worker permissions required for the event-time tracking subscription when custom Pub/Sub timestamps are enabled.
 - Use IAM/service accounts rather than committing credentials.
 - Do not use Pub/Sub Seek backward while the streaming pipeline is actively consuming; stop/restart the pipeline for controlled replay.
