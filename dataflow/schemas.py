@@ -135,3 +135,10 @@ QUARANTINE_SCHEMA = (
     "entity_type:STRING,raw_record:STRING,error_message:STRING,"
     "source_file:STRING,batch_id:STRING,ingestion_ts:TIMESTAMP"
 )
+
+
+AUDIT_SCHEMA = (
+    "pipeline_name:STRING,batch_id:STRING,source_count:INTEGER,"
+    "stage_count:INTEGER,target_count:INTEGER,rejected_count:INTEGER,"
+    "start_time:TIMESTAMP,end_time:TIMESTAMP,status:STRING,error_message:STRING"
+)
