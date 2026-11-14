@@ -156,3 +156,37 @@ Before calling the project deployed, complete:
 9. Composer manual run/backfill.
 10. Streaming Dataflow run and sample publisher.
 11. Compare outputs with `docs/expected_results.md`.
+
+
+## Additional Reviewed Assumptions
+
+### Upstream source boundary
+
+The implemented batch code begins when files land in GCS. SFTP/NAS/API are upstream source systems shown in the architecture, but this repository does not implement their extraction/transfer. This avoids pretending to provide credentials or proprietary source integrations.
+
+### Date-grain purchase attribution to SCD2
+
+The purchase source contains `purchase_date` but not an exact purchase timestamp. If a customer or product changes more than once on the same day, the fact load deterministically chooses the latest dimension version whose effective start date is on or before the purchase date. This is effectively an end-of-day assumption. A production feed with `purchase_ts` should join using the precise event timestamp instead.
+
+Returns inherit the customer/product surrogate keys from the referenced purchase fact, so return analysis remains tied to the purchase-time dimension versions.
+
+### Batch archive retention
+
+Composer archives successful source files under both business date and batch ID:
+
+```text
+archive/<entity>/business_date=YYYY-MM-DD/batch_id=<batch_id>/
+```
+
+This prevents the 08:00 and 13:00 runs from overwriting one another.
+
+### Quarantine semantics
+
+- invalid landing files -> GCS `quarantine/` prefix
+- invalid Dataflow rows -> `fitanalytics_audit.quarantine_records`
+- transformation RI rejects -> `fitanalytics_audit.transformation_rejects`
+- invalid streaming payloads -> BigQuery streaming DLQ + Pub/Sub DLQ topic
+
+### Real-time versus analytical refresh
+
+The streaming recommendation table and deduplicated consumer view are near real time. The unified dbt recommendation mart is refreshed when dbt runs from Composer, so cross-domain KPI reporting is twice daily unless dbt is scheduled more frequently.
