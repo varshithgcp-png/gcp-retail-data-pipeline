@@ -148,12 +148,16 @@ Before reprocessing a batch, Composer removes prior stage/quarantine/audit rows 
 
 ## 8. Failure Behaviour
 
-If a sensor times out, file validation fails, Dataflow fails, stage validation returns false, Dataproc fails, reconciliation reports a mismatch, or dbt tests fail, downstream archive tasks do not execute.
+If a sensor times out, file validation fails (bad files are moved to the GCS quarantine prefix), Dataflow fails, stage validation returns false, Dataproc fails, reconciliation reports a mismatch, or dbt tests fail, downstream archive tasks do not execute.
 
 This leaves source files in the landing path for investigation and rerun.
 
 ## 9. Successful Run
 
-Files move from `landing/` to `archive/` only after all transformation, reconciliation and dbt tasks succeed.
+Files move from `landing/` to a batch-specific archive path only after all transformation, five-entity reconciliation and dbt tasks succeed:
+
+```text
+archive/<entity>/business_date=YYYY-MM-DD/batch_id=<batch_id>/
+```
 
 The next phase adds the independent Pub/Sub -> Dataflow streaming path for real-time recommendation events.
