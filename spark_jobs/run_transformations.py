@@ -6,7 +6,7 @@ import logging
 from google.cloud import bigquery
 from pyspark.sql import SparkSession
 
-from spark_jobs.audit import record_fact_reconciliation, update_watermark
+from spark_jobs.audit import clear_batch_rows, record_fact_reconciliation, update_watermark
 from spark_jobs.bigquery_merges import (
     CUSTOMER_SCD2_SQL,
     PRODUCT_SCD2_SQL,
@@ -68,14 +68,24 @@ def main():
     customer_work = prepare_customer_dimension(customer_stage, args.batch_id)
     product_work = prepare_product_dimension(product_stage, args.batch_id)
 
+    customer_work_table = bq_table(
+        args.project_id, "fitanalytics_history", "wrk_customer"
+    )
+    product_work_table = bq_table(
+        args.project_id, "fitanalytics_history", "wrk_product"
+    )
+
+    clear_batch_rows(client, customer_work_table, args.batch_id)
+    clear_batch_rows(client, product_work_table, args.batch_id)
+
     write_bigquery(
         customer_work,
-        bq_table(args.project_id, "fitanalytics_history", "wrk_customer"),
+        customer_work_table,
         args.temporary_gcs_bucket,
     )
     write_bigquery(
         product_work,
-        bq_table(args.project_id, "fitanalytics_history", "wrk_product"),
+        product_work_table,
         args.temporary_gcs_bucket,
     )
 
@@ -103,15 +113,15 @@ def main():
     jobs = [
         (
             "purchase", "stg_purchase", "wrk_purchase", "fact_purchase",
-            "updated_at", prepare_purchase, PURCHASE_MERGE_SQL,
+            "purchase_id", "updated_at", prepare_purchase, PURCHASE_MERGE_SQL,
         ),
         (
             "return", "stg_return", "wrk_return", "fact_return",
-            "ingestion_ts", prepare_return, RETURN_MERGE_SQL,
+            "return_id", "ingestion_ts", prepare_return, RETURN_MERGE_SQL,
         ),
         (
             "recommendation", "stg_recommendation", "wrk_recommendation",
-            "fact_recommendation", "recommendation_ts",
+            "fact_recommendation", "recommendation_id", "recommendation_ts",
             prepare_recommendation, RECOMMENDATION_MERGE_SQL,
         ),
     ]
@@ -127,6 +137,7 @@ def main():
         stage_name,
         work_name,
         target_name,
+        business_key,
         watermark_column,
         transform,
         merge_sql,
@@ -144,6 +155,14 @@ def main():
         )
 
         stage_df = read_bigquery(spark, stage_table)
+
+        clear_batch_rows(client, work_table, args.batch_id)
+        clear_batch_rows(
+            client,
+            reject_table,
+            args.batch_id,
+            entity_type=entity,
+        )
 
         valid_df, rejected_df = transform(
             stage_df,
@@ -175,6 +194,7 @@ def main():
             stage_table,
             work_table,
             target_table,
+            business_key,
         )
 
         update_watermark(
