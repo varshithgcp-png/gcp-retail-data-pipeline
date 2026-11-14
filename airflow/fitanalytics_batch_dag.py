@@ -4,14 +4,18 @@ Scheduled for 08:00 and 13:00 Asia/Kolkata.
 Manual reruns/backfills can override business_date and batch_id in dag_run.conf.
 """
 
+import csv
 import logging
 import os
 from datetime import timedelta
+
+from google.cloud import storage
 
 import pendulum
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.apache.beam.operators.beam import (
     BeamRunPythonPipelineOperator,
 )
@@ -86,6 +90,73 @@ ENTITY_TABLES = {
     "recommendation": "stg_recommendation",
 }
 
+EXPECTED_HEADERS = {
+    "customer": [
+        "customer_id", "region", "height_cm", "weight_kg",
+        "preferred_fit", "updated_at",
+    ],
+    "product": [
+        "product_id", "sku", "brand", "category", "size_system",
+        "size_label", "fit_profile", "unit_price", "updated_at",
+    ],
+    "purchase": [
+        "purchase_id", "customer_id", "product_id", "recommended_size",
+        "purchased_size", "quantity", "amount", "purchase_date", "updated_at",
+    ],
+    "return": [
+        "return_id", "purchase_id", "customer_id", "product_id",
+        "return_reason", "fit_feedback", "return_amount", "return_date",
+    ],
+    "recommendation": [
+        "recommendation_id", "customer_id", "product_id", "recommended_size",
+        "confidence_score", "recommendation_ts", "event_id",
+    ],
+}
+
+
+def validate_landing_files(entity, business_date):
+    """Validate file naming, extension, non-zero size and CSV header."""
+    prefix = f"landing/{entity}/business_date={business_date}/"
+    client = storage.Client(project=PROJECT_ID)
+    blobs = [
+        blob for blob in client.list_blobs(GCS_BUCKET, prefix=prefix)
+        if blob.name and not blob.name.endswith("/")
+    ]
+
+    if not blobs:
+        raise ValueError(f"No objects found under gs://{GCS_BUCKET}/{prefix}")
+
+    expected_header = EXPECTED_HEADERS[entity]
+    valid_csv_count = 0
+
+    for blob in blobs:
+        file_name = os.path.basename(blob.name)
+
+        if not (file_name.startswith(f"{entity}_") and file_name.endswith(".csv")):
+            raise ValueError(
+                f"Unexpected file name for {entity}: {blob.name}. "
+                f"Expected {entity}_*.csv"
+            )
+
+        blob.reload()
+        if not blob.size or blob.size <= 0:
+            raise ValueError(f"Empty file is not allowed: {blob.name}")
+
+        preview = blob.download_as_text(start=0, end=8191)
+        first_line = preview.splitlines()[0].lstrip("\ufeff")
+        actual_header = next(csv.reader([first_line]))
+
+        if actual_header != expected_header:
+            raise ValueError(
+                f"Header mismatch in {blob.name}. "
+                f"Expected {expected_header}, got {actual_header}"
+            )
+
+        valid_csv_count += 1
+
+    if valid_csv_count == 0:
+        raise ValueError(f"No valid CSV files found for entity={entity}")
+
 
 def failure_callback(context):
     task_instance = context.get("task_instance")
@@ -136,6 +207,15 @@ with DAG(
                 timeout=60 * 60,
                 mode="reschedule",
                 deferrable=True,
+            )
+
+            validate_files = PythonOperator(
+                task_id="validate_files",
+                python_callable=validate_landing_files,
+                op_kwargs={
+                    "entity": entity,
+                    "business_date": BUSINESS_DATE,
+                },
             )
 
             prepare_batch = BigQueryInsertJobOperator(
@@ -223,7 +303,7 @@ with DAG(
                 deferrable=True,
             )
 
-            wait_for_file >> prepare_batch >> run_dataflow >> validate_stage
+            wait_for_file >> validate_files >> prepare_batch >> run_dataflow >> validate_stage
 
         start >> ingestion_group
         stage_checks.append(validate_stage)
