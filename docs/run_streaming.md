@@ -78,9 +78,12 @@ There are two levels:
 
 2. **Warehouse business-key controls**
    - `recommendation_id` / `event_id`
-   - protects downstream processing and reporting
+   - `fitanalytics_streaming.vw_recommendation_events_deduped`
+   - keeps one latest row per `event_id` for downstream analytics
 
 The sample JSONL file contains `EVT-S-004` twice to demonstrate source-level deduplication.
+
+Dataflow's Pub/Sub ID-attribute dedupe is designed for nearby retries. The deduplicated BigQuery view provides a second, persistent guard for duplicates that might arrive much later.
 
 ## Windowing and Late Data
 
@@ -243,6 +246,12 @@ SELECT
 FROM `YOUR_PROJECT_ID.fitanalytics_streaming.recommendation_window_metrics`
 ORDER BY window_start DESC, pane_index DESC;
 ```
+
+## IAM Notes
+
+The Dataflow worker identity needs permissions for the input subscription, BigQuery destinations, the pipeline DLQ topic, and Dataflow temporary/staging storage.
+
+Because the source uses a Pub/Sub event-time timestamp attribute, Dataflow can create a tracking subscription for accurate watermark estimation. Ensure the worker identity can create, consume and delete that tracking subscription and attach it to the source topic.
 
 ## Production Notes
 
