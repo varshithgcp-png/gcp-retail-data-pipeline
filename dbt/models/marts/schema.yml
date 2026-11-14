@@ -1,0 +1,52 @@
+version: 2
+
+models:
+  - name: mart_product_fit_performance
+    description: "Daily product-level Fit Analytics KPI mart with late-return lookback."
+    columns:
+      - name: metric_date
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+      - name: fit_related_return_rate
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+      - name: recommendation_acceptance_rate
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+
+  - name: mart_recommendation_accuracy
+    description: "Measures whether recommended sizes converted to purchases of the same size."
+    columns:
+      - name: recommendation_date
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+      - name: recommendation_accuracy
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 1
+              inclusive: true
+
+  - name: mart_brand_size_consistency
+    description: "Brand/category rollup showing true-to-size, runs-small and runs-large exposure."
+    columns:
+      - name: brand
+        tests: [not_null]
+      - name: category
+        tests: [not_null]
+
+  - name: mart_region_fit_trends
+    description: "Regional fit-return and recommendation trends."
+    columns:
+      - name: region
+        tests: [not_null]
+      - name: category
+        tests: [not_null]
