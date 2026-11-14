@@ -18,11 +18,22 @@ jobs:
       - name: Authenticate to Google Cloud with Workload Identity Federation
         uses: google-github-actions/auth@v3
         with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Resolve Composer environment bucket
+        id: composer
+        run: |
+          DAG_PREFIX="$(gcloud composer environments describe             "${{ vars.COMPOSER_ENVIRONMENT }}"             --location="${{ vars.COMPOSER_LOCATION }}"             --format='value(config.dagGcsPrefix)')"
+          ENV_BUCKET="$(echo "$DAG_PREFIX" | sed -E 's#gs://([^/]+)/dags#\1#')"
+          echo "dag_prefix=$DAG_PREFIX" >> "$GITHUB_OUTPUT"
+          echo "env_bucket=$ENV_BUCKET" >> "$GITHUB_OUTPUT"
 
       - name: Package Dataproc Python modules
         run: |
@@ -33,10 +44,16 @@ jobs:
           gcloud storage cp spark_jobs/run_transformations.py             "gs://${{ vars.ARTIFACT_BUCKET }}/code/spark_jobs/run_transformations.py"
           gcloud storage cp spark_jobs.zip             "gs://${{ vars.ARTIFACT_BUCKET }}/code/spark_jobs/spark_jobs.zip"
 
-      - name: Upload repository bundle for Composer data path
+      - name: Sync supporting code to Composer data folder
         run: |
-          tar -czf fitanalytics-repo.tgz             airflow dataflow dbt config streaming setup.py requirements.txt
-          gcloud storage cp fitanalytics-repo.tgz             "gs://${{ vars.ARTIFACT_BUCKET }}/code/fitanalytics-repo.tgz"
+          DEST="gs://${{ steps.composer.outputs.env_bucket }}/data/gcp-retail-data-pipeline"
+
+          gcloud storage rsync --recursive dataflow "$DEST/dataflow"
+          gcloud storage rsync --recursive dbt "$DEST/dbt"
+          gcloud storage rsync --recursive config "$DEST/config"
+          gcloud storage rsync --recursive streaming "$DEST/streaming"
+          gcloud storage cp setup.py "$DEST/setup.py"
+          gcloud storage cp requirements.txt "$DEST/requirements.txt"
 
       - name: Deploy Composer DAG
         run: |
@@ -44,6 +61,7 @@ jobs:
 
       - name: Deployment summary
         run: |
-          echo "Artifacts uploaded and Composer DAG import requested."
-          echo "Project: ${{ vars.GCP_PROJECT_ID }}"
-          echo "Artifact bucket: ${{ vars.ARTIFACT_BUCKET }}"
+          echo "Composer bucket: gs://${{ steps.composer.outputs.env_bucket }}"
+          echo "Supporting code synced to /data/gcp-retail-data-pipeline"
+          echo "Dataproc artifacts uploaded to gs://${{ vars.ARTIFACT_BUCKET }}/code/spark_jobs/"
+          echo "Composer DAG import requested."
