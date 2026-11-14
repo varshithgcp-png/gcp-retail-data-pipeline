@@ -30,7 +30,7 @@ jobs:
 
       - name: Python syntax validation
         run: |
-          python -m compileall dataflow streaming spark_jobs
+          python -m compileall dataflow streaming spark_jobs airflow
 
       - name: Batch validation unit tests
         run: |
@@ -40,6 +40,10 @@ jobs:
         run: |
           python -m pytest -q tests/test_streaming_validation.py
 
+      - name: Synthetic use-case contract tests
+        run: |
+          python -m pytest -q tests/test_sample_data_contract.py
+
       - name: Install dbt BigQuery
         run: |
           python -m pip install "dbt-bigquery>=1.12.3,<1.13.0"
@@ -48,3 +52,12 @@ jobs:
         working-directory: dbt
         run: |
           dbt deps
+
+      - name: Parse dbt project
+        working-directory: dbt
+        env:
+          DBT_BIGQUERY_PROJECT: ci-placeholder-project
+        run: |
+          mkdir -p .ci-profile
+          cp profiles.yml.example .ci-profile/profiles.yml
+          dbt parse --profiles-dir .ci-profile --no-partial-parse
