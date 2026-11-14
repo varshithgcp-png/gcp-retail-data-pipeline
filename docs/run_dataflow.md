@@ -11,6 +11,8 @@ Apache Beam / Dataflow
    +---- valid ------> fitanalytics_stage
    |
    +---- invalid ----> fitanalytics_audit.quarantine_records
+   |
+   +---- counts ------> fitanalytics_audit.pipeline_audit
 ```
 
 The same Python pipeline is reused for customer, product, purchase, return and recommendation files through metadata configuration.
@@ -68,9 +70,10 @@ python -m dataflow.fitanalytics_ingestion_pipeline \
   --staging_location gs://YOUR_BUCKET/dataflow/staging \
   --job_name fitanalytics-customer-batch \
   --entity_type customer \
-  --input gs://YOUR_BUCKET/landing/customer/customer_*.csv \
+  --input gs://YOUR_BUCKET/landing/customer/business_date=2026-11-14/customer_*.csv \
   --output_table YOUR_PROJECT_ID:fitanalytics_stage.stg_customer \
   --quarantine_table YOUR_PROJECT_ID:fitanalytics_audit.quarantine_records \
+  --audit_table YOUR_PROJECT_ID:fitanalytics_audit.pipeline_audit \
   --batch_id 20261114_080000
 ```
 
