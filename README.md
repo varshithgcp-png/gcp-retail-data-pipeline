@@ -127,7 +127,7 @@ The batch flow supports:
 - two daily arrival windows
 - retries
 - replay-safe `batch_id`
-- backfills
+- controlled backfills
 - deduplication
 - quarantine
 - source-to-target reconciliation
@@ -161,7 +161,7 @@ The streaming flow demonstrates:
 
 - publisher-generated `event_id`
 - Pub/Sub source deduplication
-- event-time timestamp attributes
+- validated event timestamps assigned before Beam windowing
 - watermarks
 - fixed windows
 - allowed lateness
@@ -198,6 +198,10 @@ customer_sk / product_sk
 SHA-256 hashes are generated from business attributes to detect changes.
 
 ## dbt Reporting Layer
+
+### Unified Staging
+
+- `stg_recommendation_unified` - batch + streaming recommendations deduplicated by `event_id`
 
 ### KPI Marts
 
@@ -241,11 +245,11 @@ The project includes:
 - data-type validation
 - domain validation
 - duplicate removal
-- referential-integrity checks
+- customer/product and return-to-purchase referential-integrity checks
 - quarantine and transformation rejects
 - audit counts
 - reconciliation
-- watermark control
+- watermark/control tracking
 - idempotent MERGE logic
 - replay-safe batch cleanup
 
@@ -310,10 +314,11 @@ See [Monitoring Guide](docs/monitoring.md) and [Monitoring SQL](bigquery/monitor
 
 Validates:
 
-- Python syntax
+- Python/Airflow syntax
 - batch validation tests
 - streaming validation tests
-- dbt package resolution
+- synthetic use-case contract tests
+- dbt dependency resolution and parse validation
 
 ### Deployment
 
@@ -355,6 +360,8 @@ gcp-retail-data-pipeline/
 - [Cloud Composer / Airflow](docs/run_composer.md)
 - [Pub/Sub / Dataflow Streaming](docs/run_streaming.md)
 - [Deployment Checklist](docs/deployment_checklist.md)
+- [Expected Synthetic Results](docs/expected_results.md)
+- [Full Use-Case Review](docs/use_case_review.md)
 - [Portfolio / Interview Summary](docs/portfolio_summary.md)
 
 ## Project Status
