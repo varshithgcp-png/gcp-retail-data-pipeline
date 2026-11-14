@@ -1,5 +1,19 @@
 # Expected Synthetic Results
 
+## Sample File Naming for Composer
+
+The files under `data/` are repository-friendly sample names. When uploading to Composer's landing contract, use names matching the entity prefix:
+
+| Repository sample | Example landing filename |
+|---|---|
+| `customers.csv` | `customer_20261101.csv` |
+| `customer_updates.csv` | `customer_20261102.csv` |
+| `products.csv` | `product_20261101.csv` |
+| `purchases.csv` | `purchase_20261101.csv` |
+| `returns.csv` | `return_20261105.csv` |
+| `recommendations.csv` | `recommendation_20261103.csv` |
+
+
 This document is the acceptance checklist for the sample data. It describes what should happen after the portfolio is deployed and executed.
 
 ## Customer SCD2
