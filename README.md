@@ -1,100 +1,157 @@
-# GCP Retail Data Engineering Pipeline
+# Fit Analytics - GCP Data Engineering Pipeline
 
-End-to-end portfolio project demonstrating a production-style batch retail data pipeline on Google Cloud.
+Portfolio project representing an apparel fit and size recommendation data platform built on Google Cloud.
 
-## Architecture
+> This repository uses fully synthetic data and a portfolio-safe architecture. It does not contain proprietary client data or source code.
+
+## Business Problem
+
+An apparel fit analytics platform helps customers select the right clothing size and helps brands understand fit-related returns, product sizing behaviour and recommendation accuracy.
+
+The platform processes:
+
+- customer fit-profile data
+- product and sizing data
+- purchases
+- returns and fit feedback
+- size recommendations
+- batch historical files
+- near-real-time recommendation events
+
+## End-to-End Architecture
 
 ```text
-Retail Source Files
-        |
-        v
- Google Cloud Storage
-        |
-        v
- Validation & Data Quality
-        |
-        v
- Dataflow / Dataproc
-        |
-        v
- BigQuery Staging
-        |
-        v
- dbt Transformations
-        |
-        v
- BigQuery Curated
-        |
-        v
- Analytics / Reporting
+Batch Sources: SFTP / NAS / API
+             |
+             v
+        GCS Landing
+             |
+      File + Schema DQ
+             |
+             v
+   Dataflow / Dataproc
+             |
+             v
+   BigQuery Stage Layer
+             |
+      Dedupe / SCD2
+             |
+             v
+ BigQuery History + Curated
+             |
+          dbt
+             |
+             v
+ Reporting Views / KPIs
 
-Invalid Records ---> Quarantine
-Pipeline Metrics --> Audit Tables
+Streaming:
+Recommendation Events
+        |
+        v
+     Pub/Sub
+        |
+        v
+     Dataflow
+        |
+  +-----+------+
+  |            |
+BigQuery      DLQ
+
+Orchestration: Cloud Composer / Airflow
+Audit: BigQuery Audit Tables
+Security: IAM, Service Accounts, RLS/CLS
 ```
 
-## Technology Stack
+## GCP Technology Stack
 
-- Google Cloud Storage (GCS)
-- Google Cloud Dataflow / Apache Beam
-- Google Cloud Dataproc / PySpark
+- Google Cloud Storage
+- Pub/Sub
+- Dataflow / Apache Beam
+- Dataproc / PySpark
 - BigQuery
 - Cloud Composer / Apache Airflow
 - dbt
 - Python
 - SQL
 - PySpark
+- IAM / Service Accounts
 
-## Business Use Case
+## BigQuery Datasets
 
-The pipeline processes retail customer, product, purchase and return data. It demonstrates ingestion, validation, deduplication, incremental processing, SCD Type 2, data-quality checks, reconciliation, audit logging and analytics-ready modelling.
+| Dataset | Purpose |
+|---|---|
+| `fitanalytics_stage` | Raw validated staging tables |
+| `fitanalytics_history` | Historical change tracking |
+| `fitanalytics_curated` | Dimensions and fact tables |
+| `fitanalytics_audit` | Pipeline audit and quarantine records |
+| `fitanalytics_reporting` | Analytics views and KPI outputs |
+
+## Main Tables
+
+### Stage
+- `stg_customer`
+- `stg_product`
+- `stg_purchase`
+- `stg_return`
+- `stg_recommendation`
+
+### Curated
+- `dim_customer`
+- `dim_product`
+- `fact_purchase`
+- `fact_return`
+- `fact_recommendation`
+
+## Engineering Scenarios Demonstrated
+
+- file-level validation
+- schema validation
+- NULL and domain checks
+- duplicate removal
+- referential integrity
+- SHA-256 change detection
+- SCD Type 2
+- incremental MERGE
+- watermark-based processing
+- idempotent reruns
+- late-arriving records
+- quarantine / dead-letter handling
+- source-to-target reconciliation
+- BigQuery partitioning and clustering
+
+## Fit Analytics KPIs
+
+- Fit-Related Return Rate
+- Recommendation Accuracy
+- Runs Small / Runs Large
+- Brand Size Consistency
+- Customer Fit Profile vs Purchase
+- Category Fit Issues
+- Region Fit Trends
+- Financial Impact of Fit Issues
 
 ## Repository Structure
 
 ```text
 gcp-retail-data-pipeline/
-├── data/             # Synthetic retail input datasets
-├── bigquery/         # BigQuery DDL, MERGE and reporting SQL
+├── data/             # Synthetic customer/product/purchase/return/recommendation files
 ├── dataflow/         # Apache Beam ingestion pipelines
-├── pyspark/          # Spark transformations and SCD2
-├── airflow/          # Composer/Airflow orchestration
-├── dbt/              # Transformation models, tests and snapshots
-├── architecture/     # Architecture diagrams
-└── docs/             # Project documentation
+├── pyspark/          # Dedupe, SCD2 and transformation logic
+├── airflow/          # Cloud Composer orchestration
+├── bigquery/         # DDL, MERGE and KPI SQL
+├── dbt/              # Models, tests, macros and snapshots
+├── config/           # Metadata-driven pipeline configuration
+├── tests/            # Unit tests
+├── architecture/     # Architecture documentation
+└── docs/             # Runbooks and project documentation
 ```
 
-## Data Quality Scenarios
+## Project Status
 
-The sample data intentionally contains records that allow the pipeline to demonstrate:
-
-- duplicate detection
-- missing critical fields
-- referential-integrity validation
-- updated customer records
-- source-to-target reconciliation
-- quarantine handling
-
-## BigQuery Design
-
-Staging and curated datasets are separated. Fact-style tables use date partitioning and customer/product clustering where appropriate to reduce scanned data and improve analytical query performance.
-
-## Planned Pipeline Flow
-
-1. Source CSV files land in GCS.
-2. File and schema checks validate incoming files.
-3. Dataflow loads valid data into BigQuery staging.
-4. Invalid records move to quarantine.
-5. PySpark/dbt applies deduplication and business transformations.
-6. SCD Type 2 preserves customer history.
-7. Curated dimensions and facts are published in BigQuery.
-8. Audit tables capture counts, status and rejected records.
-9. Airflow orchestrates dependencies, retries and monitoring.
-
-## Current Status
-
-**Phase 1 complete:** repository foundation, synthetic source datasets, initial BigQuery schemas and project documentation.
-
-**Next:** Dataflow ingestion and reusable data-quality validation.
-
-## Disclaimer
-
-All datasets in this repository are synthetic and created only for learning and portfolio demonstration. No client or proprietary data is included.
+- Phase 1: Portfolio foundation and synthetic datasets
+- Phase 2: Metadata-driven Dataflow ingestion and validation
+- Phase 3: PySpark transformation + SCD Type 2
+- Phase 4: BigQuery MERGE + dbt curated models
+- Phase 5: Airflow orchestration
+- Phase 6: Pub/Sub streaming pipeline
+- Phase 7: Reporting KPIs, optimization and final architecture
