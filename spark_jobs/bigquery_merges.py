@@ -1,0 +1,158 @@
+"""Parameterized BigQuery SQL for Fit Analytics Phase 3."""
+
+CUSTOMER_SCD2_SQL = """
+BEGIN TRANSACTION;
+
+UPDATE `{project}.fitanalytics_curated.dim_customer` d
+SET effective_end_ts = TIMESTAMP_SUB(w.updated_at, INTERVAL 1 MICROSECOND),
+    is_current = FALSE
+FROM `{project}.fitanalytics_history.wrk_customer` w
+WHERE w.batch_id = @batch_id
+  AND d.customer_id = w.customer_id
+  AND d.is_current = TRUE
+  AND d.record_hash != w.record_hash;
+
+INSERT INTO `{project}.fitanalytics_curated.dim_customer`
+(customer_sk, customer_id, region, height_cm, weight_kg, preferred_fit,
+ effective_start_ts, effective_end_ts, is_current, record_hash, batch_id, created_at)
+SELECT
+  TO_HEX(SHA256(CONCAT(w.customer_id, '|', CAST(w.updated_at AS STRING)))),
+  w.customer_id, w.region, w.height_cm, w.weight_kg, w.preferred_fit,
+  w.updated_at, TIMESTAMP('9999-12-31 23:59:59+00'), TRUE,
+  w.record_hash, w.batch_id, CURRENT_TIMESTAMP()
+FROM `{project}.fitanalytics_history.wrk_customer` w
+LEFT JOIN `{project}.fitanalytics_curated.dim_customer` d
+  ON d.customer_id = w.customer_id AND d.is_current = TRUE
+WHERE w.batch_id = @batch_id
+  AND (d.customer_id IS NULL OR d.record_hash != w.record_hash);
+
+COMMIT TRANSACTION;
+"""
+
+PRODUCT_SCD2_SQL = """
+BEGIN TRANSACTION;
+
+UPDATE `{project}.fitanalytics_curated.dim_product` d
+SET effective_end_ts = TIMESTAMP_SUB(w.updated_at, INTERVAL 1 MICROSECOND),
+    is_current = FALSE
+FROM `{project}.fitanalytics_history.wrk_product` w
+WHERE w.batch_id = @batch_id
+  AND d.product_id = w.product_id
+  AND d.is_current = TRUE
+  AND d.record_hash != w.record_hash;
+
+INSERT INTO `{project}.fitanalytics_curated.dim_product`
+(product_sk, product_id, sku, brand, category, size_system, size_label,
+ fit_profile, unit_price, effective_start_ts, effective_end_ts, is_current,
+ record_hash, batch_id, created_at)
+SELECT
+  TO_HEX(SHA256(CONCAT(w.product_id, '|', CAST(w.updated_at AS STRING)))),
+  w.product_id, w.sku, w.brand, w.category, w.size_system, w.size_label,
+  w.fit_profile, w.unit_price, w.updated_at,
+  TIMESTAMP('9999-12-31 23:59:59+00'), TRUE,
+  w.record_hash, w.batch_id, CURRENT_TIMESTAMP()
+FROM `{project}.fitanalytics_history.wrk_product` w
+LEFT JOIN `{project}.fitanalytics_curated.dim_product` d
+  ON d.product_id = w.product_id AND d.is_current = TRUE
+WHERE w.batch_id = @batch_id
+  AND (d.product_id IS NULL OR d.record_hash != w.record_hash);
+
+COMMIT TRANSACTION;
+"""
+
+PURCHASE_MERGE_SQL = """
+MERGE `{project}.fitanalytics_curated.fact_purchase` t
+USING (
+  SELECT w.purchase_id, c.customer_sk, p.product_sk,
+         w.customer_id, w.product_id, w.recommended_size, w.purchased_size,
+         w.quantity, w.amount, w.purchase_date, w.record_hash, w.batch_id
+  FROM `{project}.fitanalytics_history.wrk_purchase` w
+  JOIN `{project}.fitanalytics_curated.dim_customer` c
+    ON c.customer_id = w.customer_id
+   AND TIMESTAMP(w.purchase_date) BETWEEN c.effective_start_ts AND c.effective_end_ts
+  JOIN `{project}.fitanalytics_curated.dim_product` p
+    ON p.product_id = w.product_id
+   AND TIMESTAMP(w.purchase_date) BETWEEN p.effective_start_ts AND p.effective_end_ts
+  WHERE w.batch_id = @batch_id
+) s
+ON t.purchase_id = s.purchase_id
+WHEN MATCHED AND t.record_hash != s.record_hash THEN UPDATE SET
+  customer_sk=s.customer_sk, product_sk=s.product_sk,
+  customer_id=s.customer_id, product_id=s.product_id,
+  recommended_size=s.recommended_size, purchased_size=s.purchased_size,
+  quantity=s.quantity, amount=s.amount, purchase_date=s.purchase_date,
+  record_hash=s.record_hash, batch_id=s.batch_id, created_at=CURRENT_TIMESTAMP()
+WHEN NOT MATCHED THEN INSERT
+(purchase_id, customer_sk, product_sk, customer_id, product_id,
+ recommended_size, purchased_size, quantity, amount, purchase_date,
+ record_hash, batch_id, created_at)
+VALUES
+(s.purchase_id, s.customer_sk, s.product_sk, s.customer_id, s.product_id,
+ s.recommended_size, s.purchased_size, s.quantity, s.amount, s.purchase_date,
+ s.record_hash, s.batch_id, CURRENT_TIMESTAMP());
+"""
+
+RETURN_MERGE_SQL = """
+MERGE `{project}.fitanalytics_curated.fact_return` t
+USING (
+  SELECT w.return_id, w.purchase_id, c.customer_sk, p.product_sk,
+         w.customer_id, w.product_id, w.return_reason, w.fit_feedback,
+         w.return_amount, w.return_date, w.record_hash, w.batch_id
+  FROM `{project}.fitanalytics_history.wrk_return` w
+  JOIN `{project}.fitanalytics_curated.dim_customer` c
+    ON c.customer_id = w.customer_id
+   AND TIMESTAMP(w.return_date) BETWEEN c.effective_start_ts AND c.effective_end_ts
+  JOIN `{project}.fitanalytics_curated.dim_product` p
+    ON p.product_id = w.product_id
+   AND TIMESTAMP(w.return_date) BETWEEN p.effective_start_ts AND p.effective_end_ts
+  WHERE w.batch_id = @batch_id
+) s
+ON t.return_id = s.return_id
+WHEN MATCHED AND t.record_hash != s.record_hash THEN UPDATE SET
+  purchase_id=s.purchase_id, customer_sk=s.customer_sk, product_sk=s.product_sk,
+  customer_id=s.customer_id, product_id=s.product_id,
+  return_reason=s.return_reason, fit_feedback=s.fit_feedback,
+  return_amount=s.return_amount, return_date=s.return_date,
+  record_hash=s.record_hash, batch_id=s.batch_id, created_at=CURRENT_TIMESTAMP()
+WHEN NOT MATCHED THEN INSERT
+(return_id, purchase_id, customer_sk, product_sk, customer_id, product_id,
+ return_reason, fit_feedback, return_amount, return_date,
+ record_hash, batch_id, created_at)
+VALUES
+(s.return_id, s.purchase_id, s.customer_sk, s.product_sk, s.customer_id, s.product_id,
+ s.return_reason, s.fit_feedback, s.return_amount, s.return_date,
+ s.record_hash, s.batch_id, CURRENT_TIMESTAMP());
+"""
+
+RECOMMENDATION_MERGE_SQL = """
+MERGE `{project}.fitanalytics_curated.fact_recommendation` t
+USING (
+  SELECT w.recommendation_id, c.customer_sk, p.product_sk,
+         w.customer_id, w.product_id, w.recommended_size,
+         w.confidence_score, w.recommendation_ts, w.event_id,
+         w.record_hash, w.batch_id
+  FROM `{project}.fitanalytics_history.wrk_recommendation` w
+  JOIN `{project}.fitanalytics_curated.dim_customer` c
+    ON c.customer_id = w.customer_id
+   AND w.recommendation_ts BETWEEN c.effective_start_ts AND c.effective_end_ts
+  JOIN `{project}.fitanalytics_curated.dim_product` p
+    ON p.product_id = w.product_id
+   AND w.recommendation_ts BETWEEN p.effective_start_ts AND p.effective_end_ts
+  WHERE w.batch_id = @batch_id
+) s
+ON t.recommendation_id = s.recommendation_id
+WHEN MATCHED AND t.record_hash != s.record_hash THEN UPDATE SET
+  customer_sk=s.customer_sk, product_sk=s.product_sk,
+  customer_id=s.customer_id, product_id=s.product_id,
+  recommended_size=s.recommended_size, confidence_score=s.confidence_score,
+  recommendation_ts=s.recommendation_ts, event_id=s.event_id,
+  record_hash=s.record_hash, batch_id=s.batch_id, created_at=CURRENT_TIMESTAMP()
+WHEN NOT MATCHED THEN INSERT
+(recommendation_id, customer_sk, product_sk, customer_id, product_id,
+ recommended_size, confidence_score, recommendation_ts, event_id,
+ record_hash, batch_id, created_at)
+VALUES
+(s.recommendation_id, s.customer_sk, s.product_sk, s.customer_id, s.product_id,
+ s.recommended_size, s.confidence_score, s.recommendation_ts, s.event_id,
+ s.record_hash, s.batch_id, CURRENT_TIMESTAMP());
+"""
