@@ -11,15 +11,17 @@ models:
       - name: fit_related_return_rate
         tests:
           - dbt_utils.accepted_range:
-              min_value: 0
-              max_value: 1
-              inclusive: true
+              arguments:
+                min_value: 0
+                max_value: 1
+                inclusive: true
       - name: recommendation_acceptance_rate
         tests:
           - dbt_utils.accepted_range:
-              min_value: 0
-              max_value: 1
-              inclusive: true
+              arguments:
+                min_value: 0
+                max_value: 1
+                inclusive: true
 
   - name: mart_recommendation_accuracy
     description: "Measures whether recommended sizes converted to purchases of the same size."
@@ -31,9 +33,10 @@ models:
       - name: recommendation_accuracy
         tests:
           - dbt_utils.accepted_range:
-              min_value: 0
-              max_value: 1
-              inclusive: true
+              arguments:
+                min_value: 0
+                max_value: 1
+                inclusive: true
 
   - name: mart_brand_size_consistency
     description: "Brand/category rollup showing true-to-size, runs-small and runs-large exposure."
