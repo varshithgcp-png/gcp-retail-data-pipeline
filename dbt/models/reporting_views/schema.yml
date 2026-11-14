@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: vw_customer_fit_profile
+    description: "Customer-level fit profile and purchase/return behaviour."
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]
+
+  - name: vw_product_performance
+    description: "Product-level rollup of purchases, returns and fit KPIs."
+    columns:
+      - name: product_id
+        tests: [not_null, unique]
+
+  - name: vw_return_analysis
+    description: "Detailed return view enriched with customer region and product sizing context."
+    columns:
+      - name: return_id
+        tests: [not_null, unique]
+
+  - name: vw_recommendation_performance
+    description: "Daily recommendation accuracy and confidence by product."
+    columns:
+      - name: recommendation_date
+        tests: [not_null]
+      - name: product_id
+        tests: [not_null]
+
+  - name: vw_brand_performance
+    description: "Brand/category sizing consistency and fit-related return metrics."
+    columns:
+      - name: brand
+        tests: [not_null]
+      - name: category
+        tests: [not_null]
