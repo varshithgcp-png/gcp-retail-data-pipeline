@@ -16,8 +16,9 @@ sources:
           - name: is_current
             tests:
               - accepted_values:
-                  values: [true, false]
-                  quote: false
+                  arguments:
+                    values: [true, false]
+                    quote: false
 
       - name: dim_product
         description: "SCD Type 2 product and sizing dimension."
@@ -29,7 +30,8 @@ sources:
           - name: fit_profile
             tests:
               - accepted_values:
-                  values: ["TRUE_TO_SIZE", "RUNS_SMALL", "RUNS_LARGE"]
+                  arguments:
+                    values: ["TRUE_TO_SIZE", "RUNS_SMALL", "RUNS_LARGE"]
 
       - name: fact_purchase
         description: "Purchase facts with customer/product surrogate keys."
@@ -51,7 +53,8 @@ sources:
           - name: fit_feedback
             tests:
               - accepted_values:
-                  values: ["TRUE_TO_SIZE", "RUNS_SMALL", "RUNS_LARGE"]
+                  arguments:
+                    values: ["TRUE_TO_SIZE", "RUNS_SMALL", "RUNS_LARGE"]
                   config:
                     where: "fit_feedback is not null"
 
