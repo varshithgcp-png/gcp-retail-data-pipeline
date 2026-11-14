@@ -13,6 +13,7 @@ def _split_referential_integrity(
     customer_dim: DataFrame,
     product_dim: DataFrame,
     entity_type: str,
+    purchase_fact: DataFrame = None,
 ) -> Tuple[DataFrame, DataFrame]:
     customers = (
         customer_dim.filter(F.col("is_current") == True)
@@ -30,17 +31,34 @@ def _split_referential_integrity(
     checked = (
         df.join(customers, "customer_id", "left")
         .join(products, "product_id", "left")
-        .withColumn(
-            "_error_message",
-            F.when(F.col("_customer_exists").isNull(), F.lit("Unknown customer_id"))
-            .when(F.col("_product_exists").isNull(), F.lit("Unknown product_id"))
-            .otherwise(F.lit(None)),
+    )
+
+    if purchase_fact is not None and "purchase_id" in df.columns:
+        purchases = (
+            purchase_fact.select("purchase_id")
+            .distinct()
+            .withColumn("_purchase_exists", F.lit(True))
         )
+        checked = checked.join(purchases, "purchase_id", "left")
+    else:
+        checked = checked.withColumn("_purchase_exists", F.lit(True))
+
+    checked = checked.withColumn(
+        "_error_message",
+        F.when(F.col("_customer_exists").isNull(), F.lit("Unknown customer_id"))
+        .when(F.col("_product_exists").isNull(), F.lit("Unknown product_id"))
+        .when(F.col("_purchase_exists").isNull(), F.lit("Unknown purchase_id"))
+        .otherwise(F.lit(None)),
     )
 
     valid = (
         checked.filter(F.col("_error_message").isNull())
-        .drop("_customer_exists", "_product_exists", "_error_message")
+        .drop(
+            "_customer_exists",
+            "_product_exists",
+            "_purchase_exists",
+            "_error_message",
+        )
     )
 
     raw_columns = [F.col(column) for column in df.columns]
@@ -97,6 +115,7 @@ def prepare_return(
     customer_dim: DataFrame,
     product_dim: DataFrame,
     batch_id: str,
+    purchase_fact: DataFrame = None,
 ) -> Tuple[DataFrame, DataFrame]:
     batch = batch_rows(stage_df, batch_id)
     deduped = latest_per_key(
@@ -114,7 +133,11 @@ def prepare_return(
     )
 
     valid, rejected = _split_referential_integrity(
-        hashed, customer_dim, product_dim, "return"
+        hashed,
+        customer_dim,
+        product_dim,
+        "return",
+        purchase_fact=purchase_fact,
     )
 
     return valid.select(
