@@ -28,8 +28,8 @@ select
     "count(distinct p.purchase_id)"
   ) }} as fit_related_return_rate,
   {{ safe_rate(
-    "countif(p.recommended_size = p.purchased_size)",
-    "count(p.purchase_id)"
+    "count(distinct if(p.recommended_size = p.purchased_size, p.purchase_id, null))",
+    "count(distinct p.purchase_id)"
   ) }} as recommendation_acceptance_rate
 from customers c
 left join purchases p
