@@ -2,22 +2,21 @@
 
 ## Purpose
 
-Phase 4 converts the curated Fit Analytics warehouse into tested reporting marts and business-facing views.
+Phase 4 converts curated batch data plus deduplicated streaming recommendations into tested reporting marts and business-facing views.
 
 ```text
-fitanalytics_curated
-       |
-       v
- dbt staging views
-       |
-       v
- dbt KPI marts
-       |
-       v
-fitanalytics_reporting
-       |
-       v
-Reporting Views / BI
+fitanalytics_curated --------+
+                             |
+fitanalytics_streaming ------+--> dbt staging/unified views
+                                      |
+                                      v
+                                  KPI marts
+                                      |
+                                      v
+                             fitanalytics_reporting
+                                      |
+                                      v
+                              Reporting Views / BI
 ```
 
 ## Models
@@ -29,6 +28,7 @@ Reporting Views / BI
 - `stg_fact_purchase`
 - `stg_fact_return`
 - `stg_fact_recommendation`
+- `stg_recommendation_unified` - batch + streaming recommendations, deduplicated by `event_id`
 
 ### KPI Marts
 
@@ -48,6 +48,7 @@ Reporting Views / BI
 ## Main KPIs
 
 - Fit-Related Return Rate
+- Recommendation Conversion Rate
 - Recommendation Accuracy
 - Recommendation Acceptance Rate
 - Runs Small / Runs Large Share
@@ -65,7 +66,32 @@ Business key:
 metric_date + product_id
 ```
 
-A 7-day lookback is intentionally reprocessed during incremental runs. This allows recent partitions to be corrected when returns arrive after the original purchase.
+The normal purchase lookback is configurable through:
+
+```yaml
+vars:
+  return_lookback_days: 30
+```
+
+The model also detects newly ingested return rows by `created_at` and explicitly reprocesses their purchase IDs. This means a genuinely late return can refresh an older purchase even when that purchase is outside the normal date lookback.
+
+## Authentication
+
+The example profile uses:
+
+```yaml
+method: oauth
+```
+
+For local development, configure Application Default Credentials with `gcloud auth application-default login`.
+
+Inside Google Cloud, dbt can use the workload's configured identity/ADC. Do not commit service-account JSON keys.
+
+Set:
+
+```text
+DBT_BIGQUERY_PROJECT=YOUR_PROJECT_ID
+```
 
 ## Setup
 
@@ -78,14 +104,7 @@ cd dbt
 dbt deps
 ```
 
-Copy the profile example to your local dbt profiles directory and set:
-
-```text
-DBT_BIGQUERY_PROJECT=YOUR_PROJECT_ID
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
-```
-
-Do not commit service-account JSON keys to GitHub.
+Copy `profiles.yml.example` to your dbt profiles directory as `profiles.yml`.
 
 ## Validate Connection
 
@@ -107,26 +126,6 @@ This runs models and tests in dependency order.
 dbt build --select path:models/marts
 ```
 
-## Run One Model
-
-```bash
-dbt run --select mart_product_fit_performance
-```
-
-## Test One Model
-
-```bash
-dbt test --select mart_product_fit_performance
-```
-
-## Full Refresh
-
-Use only when model logic changes require historical recomputation:
-
-```bash
-dbt run --full-refresh --select mart_product_fit_performance+
-```
-
 ## Generate Documentation
 
 ```bash
@@ -142,5 +141,6 @@ The project validates:
 - unique IDs remain unique
 - only one current SCD2 row exists per customer/product
 - purchase dimension keys resolve
+- unified recommendation events resolve to customer/product dimensions
 - fit feedback stays within expected domains
 - KPI rates remain between 0 and 1
