@@ -1,0 +1,13 @@
+FITANALYTICS_PROJECT_ID=YOUR_PROJECT_ID
+FITANALYTICS_REGION=us-central1
+FITANALYTICS_BQ_LOCATION=US
+FITANALYTICS_GCS_BUCKET=YOUR_BUCKET
+FITANALYTICS_TEMP_BUCKET=YOUR_BUCKET
+FITANALYTICS_DATAPROC_CLUSTER=fitanalytics-cluster
+
+FITANALYTICS_REPO_ROOT=/home/airflow/gcs/data/gcp-retail-data-pipeline
+FITANALYTICS_DBT_PROJECT_DIR=/home/airflow/gcs/data/gcp-retail-data-pipeline/dbt
+FITANALYTICS_DBT_PROFILES_DIR=/home/airflow/gcs/data/dbt_profiles
+
+FITANALYTICS_SPARK_DRIVER_URI=gs://YOUR_BUCKET/code/spark_jobs/run_transformations.py
+FITANALYTICS_SPARK_PYFILES_URI=gs://YOUR_BUCKET/code/spark_jobs/spark_jobs.zip
