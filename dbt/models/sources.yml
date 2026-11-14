@@ -1,0 +1,64 @@
+version: 2
+
+sources:
+  - name: curated
+    description: "Curated Fit Analytics warehouse tables produced by Phase 3."
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+    schema: fitanalytics_curated
+    tables:
+      - name: dim_customer
+        description: "SCD Type 2 customer fit-profile dimension."
+        columns:
+          - name: customer_sk
+            tests: [not_null, unique]
+          - name: customer_id
+            tests: [not_null]
+          - name: is_current
+            tests:
+              - accepted_values:
+                  values: [true, false]
+                  quote: false
+
+      - name: dim_product
+        description: "SCD Type 2 product and sizing dimension."
+        columns:
+          - name: product_sk
+            tests: [not_null, unique]
+          - name: product_id
+            tests: [not_null]
+          - name: fit_profile
+            tests:
+              - accepted_values:
+                  values: ["TRUE_TO_SIZE", "RUNS_SMALL", "RUNS_LARGE"]
+
+      - name: fact_purchase
+        description: "Purchase facts with customer/product surrogate keys."
+        columns:
+          - name: purchase_id
+            tests: [not_null, unique]
+          - name: customer_id
+            tests: [not_null]
+          - name: product_id
+            tests: [not_null]
+
+      - name: fact_return
+        description: "Return facts including fit feedback."
+        columns:
+          - name: return_id
+            tests: [not_null, unique]
+          - name: return_reason
+            tests: [not_null]
+          - name: fit_feedback
+            tests:
+              - accepted_values:
+                  values: ["TRUE_TO_SIZE", "RUNS_SMALL", "RUNS_LARGE"]
+                  config:
+                    where: "fit_feedback is not null"
+
+      - name: fact_recommendation
+        description: "Recommendation facts produced by batch/streaming pipelines."
+        columns:
+          - name: recommendation_id
+            tests: [not_null, unique]
+          - name: event_id
+            tests: [not_null, unique]
