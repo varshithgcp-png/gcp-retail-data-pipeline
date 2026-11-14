@@ -14,7 +14,9 @@ Grant only the roles required by each workload. Avoid using owner/editor roles f
 
 ## Row-Level Security
 
-Regional analyst access can be restricted with BigQuery row access policies. Example SQL is available in:
+Regional analyst access can be restricted with BigQuery row access policies. The SQL in this repository is **illustrative**; do not apply it unchanged to a shared transformation table without ensuring Composer/dbt service identities retain the access they require. In production, a dedicated reporting table/view layer is often the safer enforcement point.
+
+Example SQL is available in:
 
 `bigquery/security_controls.sql`
 
