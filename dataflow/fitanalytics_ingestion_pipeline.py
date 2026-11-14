@@ -88,7 +88,7 @@ def create_audit_record(
         "batch_id": batch_id,
         "source_count": valid_count + invalid_count,
         "stage_count": valid_count,
-        "target_count": 0,
+        "target_count": None,
         "rejected_count": invalid_count,
         "start_time": start_time,
         "end_time": end_time,
