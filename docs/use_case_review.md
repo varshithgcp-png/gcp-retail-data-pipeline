@@ -125,6 +125,14 @@ A production retailer feed with a recommendation/session ID or precise purchase 
 
 The Composer DAG expects a file for each of the five entities at each scheduled arrival window. If an entity has no data for that window, the upstream contract can provide a valid header-only CSV; a zero-row delta is allowed.
 
+### Dimension extract grain
+
+Within one dimension batch, the transformation keeps the latest row per business key. True historical changes for the same key should arrive as separate source update timestamps/batches if every intermediate SCD2 version must be preserved.
+
+### Recommendation attribution
+
+The portfolio attribution is intentionally heuristic because the purchase sample does not contain a recommendation/session ID. More than one recommendation can theoretically map to the same later purchase. A production feed with a recommendation ID or precise session/purchase timestamp should use that direct relationship.
+
 ### Streaming lateness demo
 
 The sample includes an out-of-order older event. Whether it appears in an actual **late pane** depends on Dataflow watermark progression at runtime.
