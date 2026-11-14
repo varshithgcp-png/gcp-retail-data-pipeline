@@ -225,21 +225,23 @@ VALUES
 RETURN_MERGE_SQL = """
 MERGE `{project}.fitanalytics_curated.fact_return` t
 USING (
-  SELECT w.return_id, w.purchase_id, c.customer_sk, p.product_sk,
-         w.customer_id, w.product_id, w.return_reason, w.fit_feedback,
-         w.return_amount, w.return_date, w.record_hash, w.batch_id
+  SELECT
+    w.return_id,
+    w.purchase_id,
+    fp.customer_sk,
+    fp.product_sk,
+    w.customer_id,
+    w.product_id,
+    w.return_reason,
+    w.fit_feedback,
+    w.return_amount,
+    w.return_date,
+    w.record_hash,
+    w.batch_id
   FROM `{project}.fitanalytics_history.wrk_return` w
-  JOIN `{project}.fitanalytics_curated.dim_customer` c
-    ON c.customer_id = w.customer_id
-   AND DATE(c.effective_start_ts) <= w.return_date
-  JOIN `{project}.fitanalytics_curated.dim_product` p
-    ON p.product_id = w.product_id
-   AND DATE(p.effective_start_ts) <= w.return_date
+  JOIN `{project}.fitanalytics_curated.fact_purchase` fp
+    ON fp.purchase_id = w.purchase_id
   WHERE w.batch_id = @batch_id
-  QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY w.return_id
-    ORDER BY c.effective_start_ts DESC, p.effective_start_ts DESC
-  ) = 1
 ) s
 ON t.return_id = s.return_id
 WHEN MATCHED AND (
