@@ -17,6 +17,7 @@ from airflow.providers.apache.beam.operators.beam import (
 )
 from airflow.providers.google.cloud.operators.bigquery import (
     BigQueryCheckOperator,
+    BigQueryInsertJobOperator,
 )
 from airflow.providers.google.cloud.operators.dataflow import (
     DataflowConfiguration,
@@ -137,6 +138,29 @@ with DAG(
                 deferrable=True,
             )
 
+            prepare_batch = BigQueryInsertJobOperator(
+                task_id="prepare_batch",
+                configuration={
+                    "query": {
+                        "query": f"""
+                            DELETE FROM `{PROJECT_ID}.fitanalytics_stage.{stage_table}`
+                            WHERE batch_id = '{BATCH_ID}';
+
+                            DELETE FROM `{PROJECT_ID}.fitanalytics_audit.quarantine_records`
+                            WHERE batch_id = '{BATCH_ID}'
+                              AND entity_type = '{entity}';
+
+                            DELETE FROM `{PROJECT_ID}.fitanalytics_audit.pipeline_audit`
+                            WHERE batch_id = '{BATCH_ID}'
+                              AND pipeline_name = 'fitanalytics_{entity}_ingestion';
+                        """,
+                        "useLegacySql": False,
+                    }
+                },
+                location=BQ_LOCATION,
+                deferrable=True,
+            )
+
             run_dataflow = BeamRunPythonPipelineOperator(
                 task_id="run_dataflow",
                 runner="DataflowRunner",
@@ -199,7 +223,7 @@ with DAG(
                 deferrable=True,
             )
 
-            wait_for_file >> run_dataflow >> validate_stage
+            wait_for_file >> prepare_batch >> run_dataflow >> validate_stage
 
         start >> ingestion_group
         stage_checks.append(validate_stage)
