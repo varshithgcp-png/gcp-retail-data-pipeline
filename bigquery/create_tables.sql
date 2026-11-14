@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `PROJECT_ID.fitanalytics_stage.stg_return` (
   source_file STRING
 )
 PARTITION BY return_date
-CLUSTER BY customer_id, product_id;
+CLUSTER BY purchase_id, customer_id, product_id;
 
 CREATE TABLE IF NOT EXISTS `PROJECT_ID.fitanalytics_stage.stg_recommendation` (
   recommendation_id STRING,
