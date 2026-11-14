@@ -9,6 +9,9 @@ macro-paths: ["macros"]
 test-paths: ["tests"]
 clean-targets: ["target", "dbt_packages"]
 
+vars:
+  return_lookback_days: 30
+
 models:
   fitanalytics_dbt:
     staging:
