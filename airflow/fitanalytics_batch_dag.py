@@ -79,7 +79,12 @@ SPARK_PYFILES_URI = os.environ.get(
     f"gs://{GCS_BUCKET}/code/spark_jobs/spark_jobs.zip",
 )
 
-BUSINESS_DATE = "{{ dag_run.conf.get('business_date', ds) }}"
+BUSINESS_DATE = (
+    "{{ dag_run.conf.get("
+    "'business_date', "
+    "data_interval_end.in_timezone('Asia/Kolkata').strftime('%Y-%m-%d')"
+    ") }}"
+)
 BATCH_ID = "{{ dag_run.conf.get('batch_id', ts_nodash) }}"
 
 ENTITY_TABLES = {
