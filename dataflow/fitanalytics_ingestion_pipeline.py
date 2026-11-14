@@ -14,8 +14,13 @@ from apache_beam.io.gcp.bigquery import BigQueryDisposition
 from apache_beam.metrics import Metrics
 from apache_beam.options.pipeline_options import PipelineOptions, SetupOptions
 
-from dataflow.schemas import ENTITY_CONFIG, QUARANTINE_SCHEMA
-from dataflow.validators import parse_csv_line, validate_and_cast
+try:
+    from dataflow.schemas import ENTITY_CONFIG, QUARANTINE_SCHEMA
+    from dataflow.validators import parse_csv_line, validate_and_cast
+except ModuleNotFoundError:
+    # Allows direct execution of this file from Composer/Dataflow launcher.
+    from schemas import ENTITY_CONFIG, QUARANTINE_SCHEMA
+    from validators import parse_csv_line, validate_and_cast
 
 
 class ParseValidateRouteFn(beam.DoFn):
