@@ -59,9 +59,26 @@ sources:
                     where: "fit_feedback is not null"
 
       - name: fact_recommendation
-        description: "Recommendation facts produced by batch/streaming pipelines."
+        description: "Curated batch recommendation facts."
         columns:
           - name: recommendation_id
             tests: [not_null, unique]
           - name: event_id
             tests: [not_null, unique]
+
+  - name: streaming
+    description: "Deduplicated real-time recommendation events from Dataflow."
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+    schema: fitanalytics_streaming
+    tables:
+      - name: vw_recommendation_events_deduped
+        description: "One latest streaming row per event_id."
+        columns:
+          - name: event_id
+            tests: [not_null, unique]
+          - name: recommendation_id
+            tests: [not_null]
+          - name: customer_id
+            tests: [not_null]
+          - name: product_id
+            tests: [not_null]
