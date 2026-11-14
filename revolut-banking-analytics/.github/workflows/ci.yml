@@ -12,7 +12,7 @@ jobs:
       - run: pip install pytest PyYAML dbt-bigquery
       - run: python data/generate_day0.py
       - run: python -m compileall banking_pipeline airflow data/generate_day0.py
-      - run: pytest -q tests
+      - run: python -m pytest -q tests
       - name: dbt parse
         working-directory: dbt
         env:
