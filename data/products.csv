@@ -1,6 +1,6 @@
-product_id,product_name,category,brand,unit_price,updated_at
-501,Classic T-Shirt,Tops,Northstar,999.00,2026-11-01T07:00:00
-502,Slim Fit Jeans,Bottoms,UrbanLine,2499.00,2026-11-01T07:00:00
-503,Running Shoes,Footwear,Stride,3999.00,2026-11-01T07:00:00
-504,Winter Jacket,Outerwear,Northstar,5999.00,2026-11-01T07:00:00
-505,Casual Shirt,Tops,UrbanLine,1799.00,2026-11-01T07:00:00
+product_id,sku,brand,category,size_system,size_label,fit_profile,unit_price,updated_at
+P501,TSHIRT-001,Aurora,Tops,EU,M,TRUE_TO_SIZE,39.99,2026-11-01T07:00:00
+P502,JEANS-014,Northline,Bottoms,EU,30,RUNS_SMALL,89.99,2026-11-01T07:00:00
+P503,JACKET-101,Alpine,Outerwear,EU,L,RUNS_LARGE,149.99,2026-11-01T07:00:00
+P504,DRESS-202,Modea,Dresses,EU,S,TRUE_TO_SIZE,119.99,2026-11-01T07:00:00
+P505,SHIRT-301,Aurora,Tops,EU,L,TRUE_TO_SIZE,69.99,2026-11-01T07:00:00
