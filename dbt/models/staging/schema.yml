@@ -7,7 +7,7 @@ models:
       - name: event_id
         tests: [not_null, unique]
       - name: recommendation_id
-        tests: [not_null]
+        tests: [not_null, unique]
       - name: customer_sk
         tests: [not_null]
       - name: product_sk
