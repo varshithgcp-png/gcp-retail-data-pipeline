@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `PROJECT_ID.fitanalytics_curated.fact_return` (
   created_at TIMESTAMP
 )
 PARTITION BY return_date
-CLUSTER BY customer_id, product_id;
+CLUSTER BY purchase_id, customer_id, product_id;
 
 CREATE TABLE IF NOT EXISTS `PROJECT_ID.fitanalytics_curated.fact_recommendation` (
   recommendation_id STRING NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `PROJECT_ID.fitanalytics_history.wrk_return` (
   source_file STRING, ingestion_ts TIMESTAMP
 )
 PARTITION BY return_date
-CLUSTER BY customer_id, product_id, batch_id;
+CLUSTER BY purchase_id, customer_id, product_id, batch_id;
 
 CREATE TABLE IF NOT EXISTS `PROJECT_ID.fitanalytics_history.wrk_recommendation` (
   recommendation_id STRING, customer_id STRING, product_id STRING,
