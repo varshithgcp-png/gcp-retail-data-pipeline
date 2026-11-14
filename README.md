@@ -136,7 +136,7 @@ Security: IAM, Service Accounts, RLS/CLS
 gcp-retail-data-pipeline/
 ├── data/             # Synthetic customer/product/purchase/return/recommendation files
 ├── dataflow/         # Apache Beam ingestion pipelines
-├── pyspark/          # Dedupe, SCD2 and transformation logic
+├── spark_jobs/       # Dataproc/PySpark dedupe, SCD2, facts and audit logic
 ├── airflow/          # Cloud Composer orchestration
 ├── bigquery/         # DDL, MERGE and KPI SQL
 ├── dbt/              # Models, tests, macros and snapshots
@@ -150,8 +150,8 @@ gcp-retail-data-pipeline/
 
 - Phase 1: ✅ Portfolio foundation and synthetic datasets
 - Phase 2: ✅ Metadata-driven Dataflow ingestion and validation
-- Phase 3: PySpark transformation + SCD Type 2
-- Phase 4: BigQuery MERGE + dbt curated models
+- Phase 3: ✅ PySpark transformation + SCD Type 2 + reconciliation
+- Phase 4: dbt curated models, tests and reporting transformations
 - Phase 5: Airflow orchestration
 - Phase 6: Pub/Sub streaming pipeline
 - Phase 7: Reporting KPIs, optimization and final architecture
