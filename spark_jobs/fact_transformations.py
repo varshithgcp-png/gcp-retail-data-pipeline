@@ -154,9 +154,14 @@ def prepare_recommendation(
     batch_id: str,
 ) -> Tuple[DataFrame, DataFrame]:
     batch = batch_rows(stage_df, batch_id)
-    deduped = latest_per_key(
+    event_deduped = latest_per_key(
         batch,
         ["event_id"],
+        ["recommendation_ts", "ingestion_ts"],
+    )
+    deduped = latest_per_key(
+        event_deduped,
+        ["recommendation_id"],
         ["recommendation_ts", "ingestion_ts"],
     )
 
