@@ -17,3 +17,6 @@ models:
     marts:
       +materialized: table
       +schema: fitanalytics_reporting
+    reporting_views:
+      +materialized: view
+      +schema: fitanalytics_reporting
