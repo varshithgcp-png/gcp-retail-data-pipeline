@@ -60,6 +60,10 @@ select
   count(*) as recommendation_count,
   countif(r.recommendation_source = 'streaming') as streaming_recommendation_count,
   countif(r.purchase_id is not null) as recommendations_with_purchase,
+  {{ safe_rate(
+    "countif(r.purchase_id is not null)",
+    "count(*)"
+  ) }} as recommendation_conversion_rate,
   countif(
     r.purchase_id is not null
     and r.recommended_size = r.purchased_size
