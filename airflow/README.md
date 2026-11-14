@@ -18,11 +18,11 @@ The DAG is scheduled for:
 ```text
 start
   |
-  +--> wait customer file --> Dataflow --> stage check --+
-  +--> wait product file  --> Dataflow --> stage check --+
-  +--> wait purchase file --> Dataflow --> stage check --+--> stage gate
-  +--> wait return file   --> Dataflow --> stage check --+
-  +--> wait recommendation--> Dataflow --> stage check --+
+  +--> wait customer file --> cleanup --> Dataflow --> stage check --+
+  +--> wait product file  --> cleanup --> Dataflow --> stage check --+
+  +--> wait purchase file --> cleanup --> Dataflow --> stage check --+--> stage gate
+  +--> wait return file   --> cleanup --> Dataflow --> stage check --+
+  +--> wait recommendation--> cleanup --> Dataflow --> stage check --+
                                                          |
                                                          v
                                                Dataproc / PySpark
