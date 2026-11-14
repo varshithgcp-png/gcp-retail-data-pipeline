@@ -4,6 +4,8 @@ End-to-end Google Cloud data engineering portfolio project for an **apparel fit 
 
 The solution demonstrates production-style **batch + streaming ingestion, data quality, SCD Type 2, BigQuery modelling, dbt analytics, Airflow orchestration, monitoring, security and CI/CD**.
 
+The implemented batch boundary begins at **GCS landing**. SFTP/NAS/API are represented as upstream source systems; their transport into GCS is intentionally outside this repository.
+
 > **Portfolio disclaimer:** all data, brand names and events in this repository are synthetic. This repository contains no proprietary client data, credentials or client source code.
 
 ## Architecture
@@ -129,8 +131,9 @@ The batch flow supports:
 - replay-safe `batch_id`
 - controlled backfills
 - deduplication
-- quarantine
-- source-to-target reconciliation
+- invalid-file quarantine in GCS
+- invalid-row quarantine in BigQuery
+- source-to-target reconciliation across all five entities
 - watermark updates
 - archive-on-success behaviour
 
@@ -156,6 +159,8 @@ BigQuery             DLQ
  |
  +--> 5-minute event-time metrics
 ```
+
+Validated streaming events and the deduplicated BigQuery view are available near real time. Cross-domain dbt KPI marts are refreshed when `dbt build` runs from the batch Composer workflow (08:00 and 13:00 Asia/Kolkata).
 
 The streaming flow demonstrates:
 
