@@ -249,6 +249,7 @@ with DAG(
             validate_files = PythonOperator(
                 task_id="validate_files",
                 python_callable=validate_landing_files,
+                retries=0,
                 op_kwargs={
                     "entity": entity,
                     "business_date": BUSINESS_DATE,
@@ -282,6 +283,7 @@ with DAG(
             run_dataflow = BeamRunPythonPipelineOperator(
                 task_id="run_dataflow",
                 runner="DataflowRunner",
+                retries=0,
                 py_file=DATAFLOW_PY_FILE,
                 py_options=[],
                 pipeline_options={
@@ -327,14 +329,29 @@ with DAG(
             validate_stage = BigQueryCheckOperator(
                 task_id="validate_stage",
                 sql=f"""
+                    WITH latest_audit AS (
+                      SELECT *
+                      FROM `{PROJECT_ID}.fitanalytics_audit.pipeline_audit`
+                      WHERE pipeline_name = 'fitanalytics_{entity}_ingestion'
+                        AND batch_id = '{BATCH_ID}'
+                      ORDER BY end_time DESC
+                      LIMIT 1
+                    )
                     SELECT
-                      source_count = stage_count + rejected_count
-                      AND status = 'PROCESSED'
-                    FROM `{PROJECT_ID}.fitanalytics_audit.pipeline_audit`
-                    WHERE pipeline_name = 'fitanalytics_{entity}_ingestion'
-                      AND batch_id = '{BATCH_ID}'
-                    ORDER BY end_time DESC
-                    LIMIT 1
+                      a.source_count = a.stage_count + a.rejected_count
+                      AND a.status = 'PROCESSED'
+                      AND a.stage_count = (
+                        SELECT COUNT(*)
+                        FROM `{PROJECT_ID}.fitanalytics_stage.{stage_table}`
+                        WHERE batch_id = '{BATCH_ID}'
+                      )
+                      AND a.rejected_count = (
+                        SELECT COUNT(*)
+                        FROM `{PROJECT_ID}.fitanalytics_audit.quarantine_records`
+                        WHERE batch_id = '{BATCH_ID}'
+                          AND entity_type = '{entity}'
+                      )
+                    FROM latest_audit a
                 """,
                 use_legacy_sql=False,
                 location=BQ_LOCATION,
