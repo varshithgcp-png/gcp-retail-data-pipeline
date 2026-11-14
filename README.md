@@ -139,7 +139,7 @@ gcp-retail-data-pipeline/
 ├── spark_jobs/       # Dataproc/PySpark dedupe, SCD2, facts and audit logic
 ├── airflow/          # Cloud Composer orchestration
 ├── bigquery/         # DDL, MERGE and KPI SQL
-├── dbt/              # Models, tests, macros and snapshots
+├── dbt/              # BigQuery models, KPI marts, tests, macros and reporting views
 ├── config/           # Metadata-driven pipeline configuration
 ├── tests/            # Unit tests
 ├── architecture/     # Architecture documentation
@@ -151,7 +151,7 @@ gcp-retail-data-pipeline/
 - Phase 1: ✅ Portfolio foundation and synthetic datasets
 - Phase 2: ✅ Metadata-driven Dataflow ingestion and validation
 - Phase 3: ✅ PySpark transformation + SCD Type 2 + reconciliation
-- Phase 4: dbt curated models, tests and reporting transformations
+- Phase 4: ✅ dbt KPI marts, tests and reporting transformations
 - Phase 5: Airflow orchestration
 - Phase 6: Pub/Sub streaming pipeline
 - Phase 7: Reporting KPIs, optimization and final architecture
