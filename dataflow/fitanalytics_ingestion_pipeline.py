@@ -12,14 +12,15 @@ from datetime import datetime, timezone
 import apache_beam as beam
 from apache_beam.io.gcp.bigquery import BigQueryDisposition
 from apache_beam.metrics import Metrics
+from apache_beam.transforms.combiners import Count
 from apache_beam.options.pipeline_options import PipelineOptions, SetupOptions
 
 try:
-    from dataflow.schemas import ENTITY_CONFIG, QUARANTINE_SCHEMA
+    from dataflow.schemas import AUDIT_SCHEMA, ENTITY_CONFIG, QUARANTINE_SCHEMA
     from dataflow.validators import parse_csv_line, validate_and_cast
 except ModuleNotFoundError:
     # Allows direct execution of this file from Composer/Dataflow launcher.
-    from schemas import ENTITY_CONFIG, QUARANTINE_SCHEMA
+    from schemas import AUDIT_SCHEMA, ENTITY_CONFIG, QUARANTINE_SCHEMA
     from validators import parse_csv_line, validate_and_cast
 
 
@@ -73,6 +74,29 @@ class ParseValidateRouteFn(beam.DoFn):
             )
 
 
+def create_audit_record(
+    _,
+    valid_count,
+    invalid_count,
+    entity_type,
+    batch_id,
+    start_time,
+):
+    end_time = datetime.now(timezone.utc).isoformat()
+    return {
+        "pipeline_name": f"fitanalytics_{entity_type}_ingestion",
+        "batch_id": batch_id,
+        "source_count": valid_count + invalid_count,
+        "stage_count": valid_count,
+        "target_count": 0,
+        "rejected_count": invalid_count,
+        "start_time": start_time,
+        "end_time": end_time,
+        "status": "PROCESSED",
+        "error_message": None,
+    }
+
+
 def run(argv=None):
     parser = argparse.ArgumentParser()
 
@@ -101,6 +125,11 @@ def run(argv=None):
         required=True,
         help="Replay-safe batch identifier supplied by orchestration.",
     )
+    parser.add_argument(
+        "--audit_table",
+        required=True,
+        help="PROJECT:DATASET.TABLE for pipeline-level audit records.",
+    )
 
     known_args, beam_args = parser.parse_known_args(argv)
 
@@ -108,6 +137,7 @@ def run(argv=None):
     options.view_as(SetupOptions).save_main_session = True
 
     config = ENTITY_CONFIG[known_args.entity_type]
+    pipeline_start_time = datetime.now(timezone.utc).isoformat()
 
     with beam.Pipeline(options=options) as pipeline:
         outputs = (
@@ -140,6 +170,32 @@ def run(argv=None):
             | "Write Quarantine Rows" >> beam.io.WriteToBigQuery(
                 known_args.quarantine_table,
                 schema=QUARANTINE_SCHEMA,
+                create_disposition=BigQueryDisposition.CREATE_NEVER,
+                write_disposition=BigQueryDisposition.WRITE_APPEND,
+            )
+        )
+
+        valid_count = outputs.valid | "Count Valid Rows" >> Count.Globally()
+        invalid_count = outputs.invalid | "Count Invalid Rows" >> Count.Globally()
+
+        audit_record = (
+            pipeline
+            | "Create Audit Seed" >> beam.Create([None])
+            | "Build Audit Record" >> beam.Map(
+                create_audit_record,
+                valid_count=beam.pvalue.AsSingleton(valid_count),
+                invalid_count=beam.pvalue.AsSingleton(invalid_count),
+                entity_type=known_args.entity_type,
+                batch_id=known_args.batch_id,
+                start_time=pipeline_start_time,
+            )
+        )
+
+        _ = (
+            audit_record
+            | "Write Pipeline Audit" >> beam.io.WriteToBigQuery(
+                known_args.audit_table,
+                schema=AUDIT_SCHEMA,
                 create_disposition=BigQueryDisposition.CREATE_NEVER,
                 write_disposition=BigQueryDisposition.WRITE_APPEND,
             )
