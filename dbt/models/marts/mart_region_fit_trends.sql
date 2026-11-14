@@ -24,7 +24,7 @@ returns_by_purchase as (
   select
     purchase_id,
     count(distinct return_id) as return_count,
-    count(distinct if(is_fit_related_return = 1, return_id, null))
+    max(if(is_fit_related_return = 1, 1, 0))
       as fit_return_count,
     sum(
       if(is_fit_related_return = 1, coalesce(return_amount, 0), 0)
@@ -68,8 +68,8 @@ select
   {{ safe_rate('sum(fit_return_count)', 'count(*)') }}
     as fit_related_return_rate,
   {{ safe_rate(
-    "countif(recommended_size = purchased_size)",
-    "count(*)"
+    "countif(recommended_size is not null and recommended_size = purchased_size)",
+    "countif(recommended_size is not null)"
   ) }} as recommendation_acceptance_rate,
   current_timestamp() as dbt_updated_at
 from joined
