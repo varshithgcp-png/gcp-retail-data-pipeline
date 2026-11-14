@@ -34,6 +34,87 @@ def clear_batch_rows(
     ).result()
 
 
+
+def record_dimension_reconciliation(
+    client,
+    project_id,
+    entity_type,
+    batch_id,
+    stage_table,
+    work_table,
+    target_table,
+    business_key,
+):
+    """Reconcile staged dimension rows to retained SCD2 state."""
+
+    cleanup_sql = f"""
+    DELETE FROM `{project_id}.fitanalytics_audit.reconciliation_audit`
+    WHERE batch_id = @batch_id
+      AND entity_type = @entity_type
+    """
+    config = _query_config(batch_id, entity_type)
+    client.query(cleanup_sql, job_config=config).result()
+
+    sql = f"""
+    INSERT INTO `{project_id}.fitanalytics_audit.reconciliation_audit`
+    (
+      pipeline_name,
+      entity_type,
+      batch_id,
+      stage_count,
+      valid_count,
+      rejected_count,
+      duplicate_count,
+      target_count,
+      reconciliation_status,
+      audit_ts
+    )
+    WITH counts AS (
+      SELECT
+        (
+          SELECT COUNT(*)
+          FROM `{stage_table}`
+          WHERE batch_id = @batch_id
+        ) AS stage_count,
+        (
+          SELECT COUNT(*)
+          FROM `{work_table}`
+          WHERE batch_id = @batch_id
+        ) AS valid_count,
+        (
+          SELECT COUNT(*)
+          FROM `{work_table}` w
+          WHERE w.batch_id = @batch_id
+            AND EXISTS (
+              SELECT 1
+              FROM `{target_table}` t
+              WHERE t.{business_key} = w.{business_key}
+                AND t.record_hash = w.record_hash
+            )
+        ) AS target_count
+    )
+    SELECT
+      'fitanalytics_dataproc_transform',
+      @entity_type,
+      @batch_id,
+      stage_count,
+      valid_count,
+      0,
+      stage_count - valid_count,
+      target_count,
+      CASE
+        WHEN stage_count - valid_count >= 0
+         AND valid_count = target_count
+        THEN 'MATCHED'
+        ELSE 'MISMATCH'
+      END,
+      CURRENT_TIMESTAMP()
+    FROM counts
+    """
+
+    client.query(sql, job_config=config).result()
+
+
 def record_fact_reconciliation(
     client,
     project_id,
