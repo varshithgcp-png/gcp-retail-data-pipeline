@@ -53,15 +53,17 @@ purchases as (
 
 returns_by_purchase as (
   select
-    purchase_id,
-    count(distinct return_id) as return_count,
-    max(if(is_fit_related_return = 1, 1, 0))
+    r.purchase_id,
+    count(distinct r.return_id) as return_count,
+    max(if(r.is_fit_related_return = 1, 1, 0))
       as fit_return_count,
     sum(
-      if(is_fit_related_return = 1, coalesce(return_amount, 0), 0)
+      if(r.is_fit_related_return = 1, coalesce(r.return_amount, 0), 0)
     ) as fit_return_value
-  from returns
-  group by purchase_id
+  from returns r
+  join purchases p
+    on r.purchase_id = p.purchase_id
+  group by r.purchase_id
 ),
 
 products as (
