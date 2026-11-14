@@ -191,11 +191,15 @@ USING (
   FROM `{project}.fitanalytics_history.wrk_purchase` w
   JOIN `{project}.fitanalytics_curated.dim_customer` c
     ON c.customer_id = w.customer_id
-   AND w.purchase_date BETWEEN DATE(c.effective_start_ts) AND DATE(c.effective_end_ts)
+   AND DATE(c.effective_start_ts) <= w.purchase_date
   JOIN `{project}.fitanalytics_curated.dim_product` p
     ON p.product_id = w.product_id
-   AND w.purchase_date BETWEEN DATE(p.effective_start_ts) AND DATE(p.effective_end_ts)
+   AND DATE(p.effective_start_ts) <= w.purchase_date
   WHERE w.batch_id = @batch_id
+  QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY w.purchase_id
+    ORDER BY c.effective_start_ts DESC, p.effective_start_ts DESC
+  ) = 1
 ) s
 ON t.purchase_id = s.purchase_id
 WHEN MATCHED AND (
@@ -227,11 +231,15 @@ USING (
   FROM `{project}.fitanalytics_history.wrk_return` w
   JOIN `{project}.fitanalytics_curated.dim_customer` c
     ON c.customer_id = w.customer_id
-   AND w.return_date BETWEEN DATE(c.effective_start_ts) AND DATE(c.effective_end_ts)
+   AND DATE(c.effective_start_ts) <= w.return_date
   JOIN `{project}.fitanalytics_curated.dim_product` p
     ON p.product_id = w.product_id
-   AND w.return_date BETWEEN DATE(p.effective_start_ts) AND DATE(p.effective_end_ts)
+   AND DATE(p.effective_start_ts) <= w.return_date
   WHERE w.batch_id = @batch_id
+  QUALIFY ROW_NUMBER() OVER (
+    PARTITION BY w.return_id
+    ORDER BY c.effective_start_ts DESC, p.effective_start_ts DESC
+  ) = 1
 ) s
 ON t.return_id = s.return_id
 WHEN MATCHED AND (
