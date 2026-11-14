@@ -152,6 +152,6 @@ gcp-retail-data-pipeline/
 - Phase 2: ✅ Metadata-driven Dataflow ingestion and validation
 - Phase 3: ✅ PySpark transformation + SCD Type 2 + reconciliation
 - Phase 4: ✅ dbt KPI marts, tests and reporting transformations
-- Phase 5: Airflow orchestration
+- Phase 5: ✅ Cloud Composer / Airflow orchestration
 - Phase 6: Pub/Sub streaming pipeline
 - Phase 7: Reporting KPIs, optimization and final architecture
