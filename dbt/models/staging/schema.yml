@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: stg_recommendation_unified
+    description: "Batch + streaming recommendations deduplicated by event_id and conformed to SCD2 dimensions."
+    columns:
+      - name: event_id
+        tests: [not_null, unique]
+      - name: recommendation_id
+        tests: [not_null]
+      - name: customer_sk
+        tests: [not_null]
+      - name: product_sk
+        tests: [not_null]
+      - name: recommendation_source
+        tests:
+          - accepted_values:
+              arguments:
+                values: ["batch", "streaming"]
