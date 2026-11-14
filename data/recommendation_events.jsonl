@@ -4,3 +4,4 @@
 {"event_id":"EVT-S-004","recommendation_id":"REC-S-004","customer_id":"C004","product_id":"P504","recommended_size":"S","confidence_score":0.96,"event_ts":"2026-11-14T08:01:40Z"}
 {"event_id":"EVT-S-004","recommendation_id":"REC-S-004","customer_id":"C004","product_id":"P504","recommended_size":"S","confidence_score":0.96,"event_ts":"2026-11-14T08:01:40Z"}
 {"event_id":"EVT-S-005","recommendation_id":"REC-S-005","customer_id":"C005","product_id":"P505","recommended_size":"M","confidence_score":1.25,"event_ts":"2026-11-14T08:02:10Z"}
+{"event_id":"EVT-S-006","recommendation_id":"REC-S-006","customer_id":"C001","product_id":"P502","recommended_size":"32","confidence_score":0.87,"event_ts":"2026-11-14T07:55:30Z"}
