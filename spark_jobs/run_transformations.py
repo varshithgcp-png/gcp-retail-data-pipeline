@@ -6,7 +6,12 @@ import logging
 from google.cloud import bigquery
 from pyspark.sql import SparkSession
 
-from spark_jobs.audit import clear_batch_rows, record_fact_reconciliation, update_watermark
+from spark_jobs.audit import (
+    clear_batch_rows,
+    record_dimension_reconciliation,
+    record_fact_reconciliation,
+    update_watermark,
+)
 from spark_jobs.bigquery_merges import (
     CUSTOMER_SCD2_SQL,
     PRODUCT_SCD2_SQL,
@@ -91,6 +96,27 @@ def main():
 
     run_query(client, CUSTOMER_SCD2_SQL, args.project_id, args.batch_id)
     run_query(client, PRODUCT_SCD2_SQL, args.project_id, args.batch_id)
+
+    record_dimension_reconciliation(
+        client,
+        args.project_id,
+        "customer",
+        args.batch_id,
+        customer_stage_table,
+        customer_work_table,
+        bq_table(args.project_id, "fitanalytics_curated", "dim_customer"),
+        "customer_id",
+    )
+    record_dimension_reconciliation(
+        client,
+        args.project_id,
+        "product",
+        args.batch_id,
+        product_stage_table,
+        product_work_table,
+        bq_table(args.project_id, "fitanalytics_curated", "dim_product"),
+        "product_id",
+    )
 
     update_watermark(
         client, args.project_id, "customer", args.batch_id,
