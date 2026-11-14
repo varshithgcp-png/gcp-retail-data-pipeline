@@ -33,7 +33,11 @@ def _split_referential_integrity(
         .join(products, "product_id", "left")
     )
 
-    if purchase_fact is not None and "purchase_id" in df.columns:
+    has_purchase_reference = (
+        purchase_fact is not None and "purchase_id" in df.columns
+    )
+
+    if has_purchase_reference:
         purchases = (
             purchase_fact.select(
                 "purchase_id",
@@ -54,28 +58,45 @@ def _split_referential_integrity(
             .withColumn("_purchase_date", F.lit(None).cast("date"))
         )
 
+    error_expr = (
+        F.when(
+            F.col("_customer_exists").isNull(),
+            F.lit("Unknown customer_id"),
+        )
+        .when(
+            F.col("_product_exists").isNull(),
+            F.lit("Unknown product_id"),
+        )
+    )
+
+    if has_purchase_reference:
+        error_expr = (
+            error_expr
+            .when(
+                F.col("_purchase_exists").isNull(),
+                F.lit("Unknown purchase_id"),
+            )
+            .when(
+                F.col("_purchase_customer_id").isNotNull()
+                & (F.col("customer_id") != F.col("_purchase_customer_id")),
+                F.lit("Return customer_id does not match purchase"),
+            )
+            .when(
+                F.col("_purchase_product_id").isNotNull()
+                & (F.col("product_id") != F.col("_purchase_product_id")),
+                F.lit("Return product_id does not match purchase"),
+            )
+            .when(
+                F.col("_purchase_date").isNotNull()
+                & F.col("return_date").isNotNull()
+                & (F.col("return_date") < F.col("_purchase_date")),
+                F.lit("return_date cannot be before purchase_date"),
+            )
+        )
+
     checked = checked.withColumn(
         "_error_message",
-        F.when(F.col("_customer_exists").isNull(), F.lit("Unknown customer_id"))
-        .when(F.col("_product_exists").isNull(), F.lit("Unknown product_id"))
-        .when(F.col("_purchase_exists").isNull(), F.lit("Unknown purchase_id"))
-        .when(
-            (F.col("_purchase_customer_id").isNotNull())
-            & (F.col("customer_id") != F.col("_purchase_customer_id")),
-            F.lit("Return customer_id does not match purchase"),
-        )
-        .when(
-            (F.col("_purchase_product_id").isNotNull())
-            & (F.col("product_id") != F.col("_purchase_product_id")),
-            F.lit("Return product_id does not match purchase"),
-        )
-        .when(
-            F.col("_purchase_date").isNotNull()
-            & F.col("return_date").isNotNull()
-            & (F.col("return_date") < F.col("_purchase_date")),
-            F.lit("return_date cannot be before purchase_date"),
-        )
-        .otherwise(F.lit(None)),
+        error_expr.otherwise(F.lit(None)),
     )
 
     valid = (
@@ -105,7 +126,6 @@ def _split_referential_integrity(
     )
 
     return valid, rejected
-
 
 def prepare_purchase(
     stage_df: DataFrame,
