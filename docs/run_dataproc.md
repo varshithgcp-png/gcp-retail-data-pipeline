@@ -44,11 +44,11 @@ Dimensions contain:
 - `record_hash`
 - deterministic surrogate key
 
-A changed hash expires the old current row and inserts a new current version.
+PySpark writes deduplicated, hashed dimension work rows. BigQuery then rebuilds only the affected customer/product histories from retained work records ordered by source `updated_at`. Consecutive identical hashes are collapsed, version end timestamps are derived with `LEAD`, and exactly one latest version is marked current.
 
 ## Expected Synthetic DQ Scenario
 
-Purchase `PU1005` references customer `C999`. It should fail referential integrity and be written to the transformation reject table instead of entering the curated purchase fact.
+Purchase `PU1005` references customer `C999` and should be rejected. Return `R2004` references purchase `PU9999` and should also be rejected. See `docs/expected_results.md` for expected counts.
 
 ## Setup
 
@@ -79,4 +79,4 @@ The Spark BigQuery connector must be available to the Dataproc runtime for DataF
 
 ## Why PySpark + BigQuery MERGE
 
-PySpark performs scalable deduplication, validation and hash calculation. BigQuery executes the final SCD2 transaction and fact MERGE close to the warehouse. This keeps curated writes atomic and replay-safe.
+PySpark performs scalable deduplication, validation and hash calculation. BigQuery executes the affected-key SCD2 rebuild transaction and fact MERGE close to the warehouse. Deterministic surrogate keys keep existing versions stable. If an older dimension backfill changes historical version boundaries, rerun the impacted fact business dates to refresh surrogate-key assignments.
