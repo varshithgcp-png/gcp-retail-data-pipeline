@@ -354,11 +354,17 @@ with DAG(
         task_id="validate_reconciliation",
         sql=f"""
             SELECT
-              COUNT(*) = 3
+              COUNT(*) = 5
               AND COUNTIF(reconciliation_status = 'MISMATCH') = 0
             FROM `{PROJECT_ID}.fitanalytics_audit.reconciliation_audit`
             WHERE batch_id = '{BATCH_ID}'
-              AND entity_type IN ('purchase', 'return', 'recommendation')
+              AND entity_type IN (
+                'customer',
+                'product',
+                'purchase',
+                'return',
+                'recommendation'
+              )
         """,
         use_legacy_sql=False,
         location=BQ_LOCATION,
