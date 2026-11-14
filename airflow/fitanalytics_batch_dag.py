@@ -124,10 +124,11 @@ EXPECTED_HEADERS = {
 }
 
 
-def validate_landing_files(entity, business_date):
-    """Validate file naming, extension, non-zero size and CSV header."""
+def validate_landing_files(entity, business_date, batch_id):
+    """Validate landing files and quarantine invalid files."""
     prefix = f"landing/{entity}/business_date={business_date}/"
     client = storage.Client(project=PROJECT_ID)
+    bucket = client.bucket(GCS_BUCKET)
     blobs = [
         blob for blob in client.list_blobs(GCS_BUCKET, prefix=prefix)
         if blob.name and not blob.name.endswith("/")
@@ -138,31 +139,57 @@ def validate_landing_files(entity, business_date):
 
     expected_header = EXPECTED_HEADERS[entity]
     valid_csv_count = 0
+    validation_errors = []
 
     for blob in blobs:
         file_name = os.path.basename(blob.name)
+        error_message = None
 
-        if not (file_name.startswith(f"{entity}_") and file_name.endswith(".csv")):
-            raise ValueError(
-                f"Unexpected file name for {entity}: {blob.name}. "
-                f"Expected {entity}_*.csv"
+        try:
+            if not (
+                file_name.startswith(f"{entity}_")
+                and file_name.endswith(".csv")
+            ):
+                error_message = (
+                    f"Unexpected file name. Expected {entity}_*.csv"
+                )
+            else:
+                blob.reload()
+                if not blob.size or blob.size <= 0:
+                    error_message = "Empty file is not allowed"
+                else:
+                    preview = blob.download_as_text(start=0, end=8191)
+                    first_line = preview.splitlines()[0].lstrip("\ufeff")
+                    actual_header = next(csv.reader([first_line]))
+
+                    if actual_header != expected_header:
+                        error_message = (
+                            f"Header mismatch. Expected {expected_header}, "
+                            f"got {actual_header}"
+                        )
+
+        except Exception as exc:
+            error_message = f"File validation error: {exc}"
+
+        if error_message:
+            quarantine_name = (
+                f"quarantine/{entity}/business_date={business_date}/"
+                f"batch_id={batch_id}/{file_name}"
             )
-
-        blob.reload()
-        if not blob.size or blob.size <= 0:
-            raise ValueError(f"Empty file is not allowed: {blob.name}")
-
-        preview = blob.download_as_text(start=0, end=8191)
-        first_line = preview.splitlines()[0].lstrip("\ufeff")
-        actual_header = next(csv.reader([first_line]))
-
-        if actual_header != expected_header:
-            raise ValueError(
-                f"Header mismatch in {blob.name}. "
-                f"Expected {expected_header}, got {actual_header}"
+            bucket.copy_blob(blob, bucket, quarantine_name)
+            blob.delete()
+            validation_errors.append(
+                f"{blob.name}: {error_message}; "
+                f"moved to gs://{GCS_BUCKET}/{quarantine_name}"
             )
+        else:
+            valid_csv_count += 1
 
-        valid_csv_count += 1
+    if validation_errors:
+        raise ValueError(
+            "Landing file validation failed: "
+            + " | ".join(validation_errors)
+        )
 
     if valid_csv_count == 0:
         raise ValueError(f"No valid CSV files found for entity={entity}")
@@ -225,6 +252,7 @@ with DAG(
                 op_kwargs={
                     "entity": entity,
                     "business_date": BUSINESS_DATE,
+                    "batch_id": BATCH_ID,
                 },
             )
 
