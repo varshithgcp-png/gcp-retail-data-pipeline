@@ -1,0 +1,49 @@
+name: Deploy GCP Artifacts
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud with Workload Identity Federation
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Package Dataproc Python modules
+        run: |
+          zip -r spark_jobs.zip spark_jobs
+
+      - name: Upload Dataproc artifacts
+        run: |
+          gcloud storage cp spark_jobs/run_transformations.py             "gs://${{ vars.ARTIFACT_BUCKET }}/code/spark_jobs/run_transformations.py"
+          gcloud storage cp spark_jobs.zip             "gs://${{ vars.ARTIFACT_BUCKET }}/code/spark_jobs/spark_jobs.zip"
+
+      - name: Upload repository bundle for Composer data path
+        run: |
+          tar -czf fitanalytics-repo.tgz             airflow dataflow dbt config streaming setup.py requirements.txt
+          gcloud storage cp fitanalytics-repo.tgz             "gs://${{ vars.ARTIFACT_BUCKET }}/code/fitanalytics-repo.tgz"
+
+      - name: Deploy Composer DAG
+        run: |
+          gcloud composer environments storage dags import             --environment="${{ vars.COMPOSER_ENVIRONMENT }}"             --location="${{ vars.COMPOSER_LOCATION }}"             --source="airflow/fitanalytics_batch_dag.py"
+
+      - name: Deployment summary
+        run: |
+          echo "Artifacts uploaded and Composer DAG import requested."
+          echo "Project: ${{ vars.GCP_PROJECT_ID }}"
+          echo "Artifact bucket: ${{ vars.ARTIFACT_BUCKET }}"
