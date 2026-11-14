@@ -1,7 +1,7 @@
-customer_id,name,email,city,state,updated_at
-101,Rahul Kumar,rahul@example.com,Hyderabad,Telangana,2026-11-01T08:10:00
-102,Priya Sharma,priya@example.com,Bengaluru,Karnataka,2026-11-01T08:12:00
-103,Arjun Rao,arjun@example.com,Chennai,Tamil Nadu,2026-11-01T08:15:00
-104,Neha Singh,neha@example.com,Pune,Maharashtra,2026-11-01T08:18:00
-102,Priya Sharma,priya@example.com,Bengaluru,Karnataka,2026-11-02T09:05:00
-105,Kiran Reddy,,Hyderabad,Telangana,2026-11-02T09:10:00
+customer_id,region,height_cm,weight_kg,preferred_fit,updated_at
+C001,UK,178,76,REGULAR,2026-11-01T08:10:00
+C002,DE,165,58,SLIM,2026-11-01T08:12:00
+C003,US,182,84,RELAXED,2026-11-01T08:15:00
+C004,FR,170,65,REGULAR,2026-11-01T08:18:00
+C002,DE,165,60,REGULAR,2026-11-02T09:05:00
+C005,UK,,72,SLIM,2026-11-02T09:10:00
