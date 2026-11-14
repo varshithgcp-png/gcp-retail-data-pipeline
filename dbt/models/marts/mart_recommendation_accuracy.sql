@@ -8,6 +8,8 @@
 with recommendations as (
   select *
   from {{ ref('stg_recommendation_unified') }}
+  where customer_sk is not null
+    and product_sk is not null
 ),
 
 purchases as (
