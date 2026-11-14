@@ -18,11 +18,11 @@ The DAG is scheduled for:
 ```text
 start
   |
-  +--> wait customer file --> cleanup --> Dataflow --> stage check --+
-  +--> wait product file  --> cleanup --> Dataflow --> stage check --+
-  +--> wait purchase file --> cleanup --> Dataflow --> stage check --+--> stage gate
-  +--> wait return file   --> cleanup --> Dataflow --> stage check --+
-  +--> wait recommendation--> cleanup --> Dataflow --> stage check --+
+  +--> wait customer file --> validate file --> cleanup --> Dataflow --> stage check --+
+  +--> wait product file  --> validate file --> cleanup --> Dataflow --> stage check --+
+  +--> wait purchase file --> validate file --> cleanup --> Dataflow --> stage check --+--> stage gate
+  +--> wait return file   --> validate file --> cleanup --> Dataflow --> stage check --+
+  +--> wait recommendation--> validate file --> cleanup --> Dataflow --> stage check --+
                                                          |
                                                          v
                                                Dataproc / PySpark
@@ -64,4 +64,4 @@ gs://YOUR_BUCKET/landing/
 └── recommendation/business_date=YYYY-MM-DD/
 ```
 
-Processed files are moved to the matching `archive/` path only after Dataflow, Dataproc, reconciliation and dbt succeed.
+Before ingestion, each landing file is checked for expected naming, `.csv` extension, non-zero size and exact header order. Processed files are moved to the matching `archive/` path only after Dataflow, Dataproc, reconciliation and dbt succeed.
