@@ -24,7 +24,7 @@ Exact raw-table names:
 - `LOANPAYMENTS_bronze`
 - `CONTROL_TABLE_bronze`
 
-Metadata tables: `ENTITY_CONFIG_bronze`, `VALIDATION_RULES_bronze`.
+Metadata tables: `ENTITY_CONFIG_bronze`, `COLUMN_CONFIG_bronze`, `VALIDATION_RULES_bronze`.
 
 ## Ownership by layer
 ```text
@@ -52,6 +52,8 @@ Facts:
 5. `kpi_customer_account_history`
 6. `kpi_loan_repayment_health`
 7. `kpi_card_product_adoption`
+
+Additional risk-review output: `kpi_transaction_anomaly_review` combines high-value, structuring, dormant-reactivation and currency-mismatch flags.
 
 ## DQ / anomaly evidence
 `revolut_silver.dq_quarantine` retains rule name, severity and failure reason for duplicate customers, missing customer fields, duplicate transactions, currency mismatches, invalid dates, sort-code issues, overdraft breaches, structuring candidates and dormant-reactivation bursts.

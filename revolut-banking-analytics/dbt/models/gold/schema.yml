@@ -22,3 +22,8 @@ models:
     columns:
       - name: payment_id
         tests: [not_null, unique]
+
+  - name: kpi_suspicious_transactions
+    description: Required KPI containing transactions above the configured high-value threshold.
+  - name: kpi_transaction_anomaly_review
+    description: Broader risk-review output for high-value, structuring, dormant-reactivation and currency-mismatch flags.

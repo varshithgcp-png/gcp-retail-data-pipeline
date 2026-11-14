@@ -3,39 +3,59 @@ entities:
     target_table: BRANCHES_bronze
     primary_key: BranchID
     columns: [BranchID, BranchName, City, Country, SortCodePrefix, Region]
+    required_fields: [BranchID, BranchName, SortCodePrefix]
+    data_types: {BranchID: INT64, BranchName: STRING, City: STRING, Country: STRING, SortCodePrefix: STRING, Region: STRING}
   CUSTOMERS:
     target_table: CUSTOMERS_bronze
     primary_key: CustomerID
     columns: [CustomerID, FirstName, LastName, Email, Phone, DateOfBirth, City, Country, RiskRating, UpdatedAt]
+    required_fields: [CustomerID, FirstName, LastName, Email, Phone, UpdatedAt]
+    data_types: {CustomerID: INT64, FirstName: STRING, LastName: STRING, Email: STRING, Phone: STRING, DateOfBirth: DATE, City: STRING, Country: STRING, RiskRating: STRING, UpdatedAt: TIMESTAMP}
   EMPLOYEES:
     target_table: EMPLOYEES_bronze
     primary_key: EmployeeID
     columns: [EmployeeID, BranchID, FirstName, LastName, Role, HireDate, Status]
+    required_fields: [EmployeeID, BranchID, FirstName, LastName, Status]
+    data_types: {EmployeeID: INT64, BranchID: INT64, FirstName: STRING, LastName: STRING, Role: STRING, HireDate: DATE, Status: STRING}
   ACCOUNTTYPES:
     target_table: ACCOUNTTYPES_bronze
     primary_key: AccountTypeID
     columns: [AccountTypeID, AccountType, ProductCategory, MonthlyFee, InterestRate, OverdraftLimit]
+    required_fields: [AccountTypeID, AccountType, ProductCategory, OverdraftLimit]
+    data_types: {AccountTypeID: INT64, AccountType: STRING, ProductCategory: STRING, MonthlyFee: NUMERIC, InterestRate: NUMERIC, OverdraftLimit: NUMERIC}
   ACCOUNTS:
     target_table: ACCOUNTS_bronze
     primary_key: AccountID
     columns: [AccountID, CustomerID, AccountTypeID, BranchID, SortCode, AccountNumber, Currency, Balance, OpenDate, CloseDate, Status, UpdatedAt]
+    required_fields: [AccountID, CustomerID, AccountTypeID, BranchID, SortCode, AccountNumber, Currency, Balance, OpenDate, Status, UpdatedAt]
+    data_types: {AccountID: INT64, CustomerID: INT64, AccountTypeID: INT64, BranchID: INT64, SortCode: STRING, AccountNumber: STRING, Currency: STRING, Balance: NUMERIC, OpenDate: DATE, CloseDate: DATE, Status: STRING, UpdatedAt: TIMESTAMP}
   CARDS:
     target_table: CARDS_bronze
     primary_key: CardID
     columns: [CardID, AccountID, CardType, Network, IssueDate, ExpiryDate, Status, ContactlessEnabled]
+    required_fields: [CardID, AccountID, CardType, Status]
+    data_types: {CardID: INT64, AccountID: INT64, CardType: STRING, Network: STRING, IssueDate: DATE, ExpiryDate: DATE, Status: STRING, ContactlessEnabled: BOOL}
   TRANSACTIONTYPES:
     target_table: TRANSACTIONTYPES_bronze
     primary_key: TransactionTypeID
     columns: [TransactionTypeID, TransactionType, Category, Direction, IsCashProxy]
+    required_fields: [TransactionTypeID, TransactionType, Category, Direction, IsCashProxy]
+    data_types: {TransactionTypeID: INT64, TransactionType: STRING, Category: STRING, Direction: STRING, IsCashProxy: BOOL}
   TRANSACTIONS:
     target_table: TRANSACTIONS_bronze
     primary_key: TransactionID
     columns: [TransactionID, AccountID, TransactionTypeID, TransactionTs, Amount, Currency, Channel, MerchantCategory, Reference]
+    required_fields: [TransactionID, AccountID, TransactionTypeID, TransactionTs, Amount, Currency, Channel]
+    data_types: {TransactionID: INT64, AccountID: INT64, TransactionTypeID: INT64, TransactionTs: TIMESTAMP, Amount: NUMERIC, Currency: STRING, Channel: STRING, MerchantCategory: STRING, Reference: STRING}
   LOANS:
     target_table: LOANS_bronze
     primary_key: LoanID
     columns: [LoanID, CustomerID, BranchID, LoanType, PrincipalAmount, InterestRate, StartDate, EndDate, Status]
+    required_fields: [LoanID, CustomerID, BranchID, LoanType, PrincipalAmount, StartDate, Status]
+    data_types: {LoanID: INT64, CustomerID: INT64, BranchID: INT64, LoanType: STRING, PrincipalAmount: NUMERIC, InterestRate: NUMERIC, StartDate: DATE, EndDate: DATE, Status: STRING}
   LOANPAYMENTS:
     target_table: LOANPAYMENTS_bronze
     primary_key: PaymentID
     columns: [PaymentID, LoanID, PaymentDate, DueDate, Amount, PaymentStatus]
+    required_fields: [PaymentID, LoanID, PaymentDate, DueDate, Amount, PaymentStatus]
+    data_types: {PaymentID: INT64, LoanID: INT64, PaymentDate: DATE, DueDate: DATE, Amount: NUMERIC, PaymentStatus: STRING}

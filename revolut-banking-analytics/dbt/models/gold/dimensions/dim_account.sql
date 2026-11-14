@@ -1,3 +1,21 @@
 {{ config(materialized='table', cluster_by=['account_id','customer_id','is_current']) }}
-with s as (select *, min(dbt_valid_from) over(partition by account_id) first_valid_from from {{ ref('accounts_snapshot') }})
-select to_hex(sha256(concat(cast(account_id as string),'|',cast(dbt_valid_from as string)))) account_sk,account_id,customer_id,account_type_id,branch_id,sort_code,account_number,currency,balance,open_date,close_date,status,if(dbt_valid_from=first_valid_from,timestamp('1900-01-01'),dbt_valid_from) effective_from,coalesce(dbt_valid_to,timestamp('9999-12-31 23:59:59+00')) effective_to,dbt_valid_to is null is_current from s
+with s as (
+  select *,
+    min(dbt_valid_from) over(partition by account_id) first_valid_from,
+    first_value(load_type) over(
+      partition by account_id order by dbt_valid_from
+    ) first_load_type
+  from {{ ref('accounts_snapshot') }}
+)
+select
+  to_hex(sha256(concat(cast(account_id as string),'|',cast(dbt_valid_from as string)))) account_sk,
+  account_id,customer_id,account_type_id,branch_id,sort_code,account_number,currency,balance,
+  open_date,close_date,status,
+  case
+    when dbt_valid_from=first_valid_from and first_load_type='FULL'
+      then timestamp('1900-01-01')
+    else dbt_valid_from
+  end effective_from,
+  coalesce(dbt_valid_to,timestamp('9999-12-31 23:59:59+00')) effective_to,
+  dbt_valid_to is null is_current
+from s

@@ -30,4 +30,4 @@ The synthetic Day 0 baseline contains **2,748 data rows** across all ten entity 
 | Structuring candidate accounts | 2 (`8`, `17`) |
 | Dormant reactivation accounts | 1 (`17`) |
 
-These are intentional synthetic examples so dbt Silver produces traceable DQ/anomaly evidence rather than an unrealistically clean dataset.
+These are intentional synthetic examples so dbt Silver produces traceable DQ/anomaly evidence rather than an unrealistically clean dataset. Account `17` is generated with no ordinary transactions before its deliberate October burst, so the dormant-reactivation case represents a genuine long-inactivity scenario.

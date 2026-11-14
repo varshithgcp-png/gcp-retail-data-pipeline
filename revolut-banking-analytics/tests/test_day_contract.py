@@ -18,3 +18,17 @@ def test_day2_only_customer_account_and_required_new_ids():
     assert set(b)=={'CUSTOMERS','ACCOUNTS'}
     assert {'371','372'}.issubset({r[0] for r in b['CUSTOMERS'].rows})
     assert {'483','484'}.issubset({r[0] for r in b['ACCOUNTS'].rows})
+
+
+def test_day0_dormant_reactivation_has_no_prior_account17_activity():
+    b=parse_interleaved_text((ROOT/'data/EvalDB_Day0_Interleaved.txt').read_text())
+    rows=[r for r in b['TRANSACTIONS'].rows if r[1]=='17']
+    assert {r[0] for r in rows} == {'1101','1102','1103'}
+
+def test_entity_metadata_contains_required_fields_and_types():
+    import yaml
+    payload=yaml.safe_load((ROOT/'config/entities.yml').read_text())
+    for entity,cfg in payload['entities'].items():
+        assert cfg['primary_key'] in cfg['columns']
+        assert cfg['required_fields']
+        assert set(cfg['columns']) == set(cfg['data_types'])

@@ -51,7 +51,16 @@ for aid in range(1,481):
 types=[('1','Salary Credit','INCOME','CREDIT','FALSE'),('2','Card Purchase','CARD_PAYMENT','DEBIT','FALSE'),('3','ATM Withdrawal','ATM','DEBIT','TRUE'),('4','Bank Transfer Out','TRANSFER','DEBIT','FALSE'),('5','Bank Transfer In','TRANSFER','CREDIT','FALSE'),('6','Cash Deposit','DEPOSIT','CREDIT','TRUE'),('7','Loan Repayment','LOAN_PAYMENT','DEBIT','FALSE'),('8','Fee Charge','FEE','DEBIT','FALSE')]
 transactions=[]; start=datetime(2026,7,1,8)
 for tid in range(1,1201):
-    aid=str(random.randint(1,480)); ttype=str(random.randint(1,8)); ts=start+timedelta(minutes=random.randint(0,60*24*120)); amount=round(random.uniform(5,15000),2); currency=account_currency[aid]; channel=random.choice(['MOBILE','WEB','CARD','ATM','BRANCH','BACS','SYSTEM']); merchant=random.choice(['GROCERIES','TRAVEL','RETAIL','RESTAURANT','UTILITIES','TRANSFER','CASH','FEE','SALARY','ELECTRONICS'])
+    aid=str(random.randint(1,480))
+    # Keep account 17 inactive until the deliberate dormant-reactivation burst.
+    if aid=='17':
+        aid='20'
+    ttype=str(random.randint(1,8))
+    ts=start+timedelta(minutes=random.randint(0,60*24*120))
+    amount=round(random.uniform(5,15000),2)
+    currency=account_currency[aid]
+    channel=random.choice(['MOBILE','WEB','CARD','ATM','BRANCH','BACS','SYSTEM'])
+    merchant=random.choice(['GROCERIES','TRAVEL','RETAIL','RESTAURANT','UTILITIES','TRANSFER','CASH','FEE','SALARY','ELECTRONICS'])
     if tid%211==0: amount=125000.00
     if tid%173==0: currency='EUR' if account_currency[aid] != 'EUR' else 'USD'
     if tid%257==0: ts=datetime.combine(account_open[aid]-timedelta(days=2),datetime.min.time())+timedelta(hours=10)

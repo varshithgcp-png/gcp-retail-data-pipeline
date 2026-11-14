@@ -16,4 +16,12 @@ CREATE TABLE IF NOT EXISTS `PROJECT_ID.revolut_bronze.LOANS_bronze` (LoanID STRI
 CREATE TABLE IF NOT EXISTS `PROJECT_ID.revolut_bronze.LOANPAYMENTS_bronze` (PaymentID STRING,LoanID STRING,PaymentDate STRING,DueDate STRING,Amount STRING,PaymentStatus STRING,batch_id STRING,business_date DATE,load_type STRING,source_file STRING,source_path STRING,source_row_number INT64,file_hash STRING,ingestion_ts TIMESTAMP) PARTITION BY business_date CLUSTER BY LoanID,PaymentID;
 CREATE TABLE IF NOT EXISTS `PROJECT_ID.revolut_bronze.CONTROL_TABLE_bronze` (batch_id STRING,business_date DATE,load_type STRING,source_file STRING,source_path STRING,file_hash STRING,entity_name STRING,target_table STRING,source_row_count INT64,bronze_row_count INT64,rejected_row_count INT64,processing_status STRING,pipeline_status STRING,start_time TIMESTAMP,end_time TIMESTAMP,error_message STRING,created_at TIMESTAMP) PARTITION BY business_date CLUSTER BY batch_id,entity_name,processing_status;
 CREATE TABLE IF NOT EXISTS `PROJECT_ID.revolut_bronze.ENTITY_CONFIG_bronze` (entity_name STRING,target_table STRING,primary_key STRING,expected_columns ARRAY<STRING>,active_flag BOOL,updated_at TIMESTAMP);
+CREATE TABLE IF NOT EXISTS `PROJECT_ID.revolut_bronze.COLUMN_CONFIG_bronze` (
+  entity_name STRING,
+  column_name STRING,
+  ordinal_position INT64,
+  silver_data_type STRING,
+  required_flag BOOL,
+  updated_at TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS `PROJECT_ID.revolut_bronze.VALIDATION_RULES_bronze` (rule_id STRING,entity STRING,rule_name STRING,severity STRING,treatment STRING,active_flag BOOL,updated_at TIMESTAMP);
