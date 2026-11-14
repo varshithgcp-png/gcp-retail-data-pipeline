@@ -18,7 +18,6 @@ purchases as (
 products as (
   select *
   from {{ ref('stg_dim_product') }}
-  where is_current = true
 ),
 
 candidate_matches as (
@@ -27,6 +26,7 @@ candidate_matches as (
     r.event_id,
     r.customer_id,
     r.product_id,
+    r.product_sk,
     r.recommended_size,
     r.confidence_score,
     r.recommendation_ts,
@@ -35,14 +35,14 @@ candidate_matches as (
     p.purchase_date,
     row_number() over (
       partition by r.recommendation_id
-      order by timestamp(p.purchase_date) asc
+      order by p.purchase_date asc, p.purchase_id asc
     ) as rn
   from recommendations r
   left join purchases p
     on r.customer_id = p.customer_id
    and r.product_id = p.product_id
-   and timestamp(p.purchase_date) >= r.recommendation_ts
-   and timestamp(p.purchase_date) < timestamp_add(r.recommendation_ts, interval 30 day)
+   and p.purchase_date >= date(r.recommendation_ts)
+   and p.purchase_date < date_add(date(r.recommendation_ts), interval 30 day)
 ),
 
 latest as (
@@ -67,5 +67,5 @@ select
   current_timestamp() as dbt_updated_at
 from latest r
 join products dp
-  on r.product_id = dp.product_id
+  on r.product_sk = dp.product_sk
 group by 1,2,3,4
