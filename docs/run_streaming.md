@@ -177,7 +177,7 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Publish the synthetic events:
+Publish the synthetic events. By default the publisher shifts the sample timestamps near current UTC while preserving relative timing, including the intentionally late event:
 
 ```bash
 python -m streaming.publish_sample_events \
@@ -192,12 +192,14 @@ The sample file contains:
 - normal valid recommendation events
 - duplicate `EVT-S-004`
 - `EVT-S-005` with confidence score `1.25`
+- `EVT-S-006` published last but carrying an older event timestamp to demonstrate late data
 
 Expected outcome:
 
 - valid events -> `fitanalytics_streaming.recommendation_events`
 - duplicate logical event -> source dedupe
 - invalid confidence event -> `fitanalytics_audit.streaming_dlq` + Pub/Sub DLQ topic
+- older `EVT-S-006` -> processed using event time and the configured allowed-lateness policy
 - window counts -> `fitanalytics_streaming.recommendation_window_metrics`
 
 ## 6. Query Recent Events
