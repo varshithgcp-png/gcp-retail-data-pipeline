@@ -2,3 +2,8 @@
 # Airflow and Google provider packages are supplied by Composer.
 dbt-bigquery>=1.12.3,<1.13.0
 apache-beam[gcp]>=2.60.0,<3.0.0
+
+# The DAG imports BeamRunPythonPipelineOperator from
+# apache-airflow-providers-apache-beam. Many Composer images include it.
+# If your image does not, install a provider release compatible with that
+# Composer/Airflow image rather than forcing an Airflow upgrade here.
