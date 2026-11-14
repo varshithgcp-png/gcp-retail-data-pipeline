@@ -59,7 +59,7 @@ aggregated as (
     count(distinct pr.return_id) as return_count,
     count(distinct if(pr.is_fit_related_return = 1, pr.return_id, null)) as fit_return_count,
     sum(if(pr.is_fit_related_return = 1, coalesce(pr.return_amount, 0), 0)) as fit_return_value,
-    countif(pr.recommended_size = pr.purchased_size) as recommendation_match_count
+    count(distinct if(pr.recommended_size = pr.purchased_size, pr.purchase_id, null)) as recommendation_match_count
   from purchase_return pr
   join products dp
     on pr.product_sk = dp.product_sk
@@ -77,6 +77,7 @@ select
   return_count,
   fit_return_count,
   fit_return_value,
+  recommendation_match_count,
   {{ safe_rate('fit_return_count', 'purchase_count') }} as fit_related_return_rate,
   {{ safe_rate('recommendation_match_count', 'purchase_count') }} as recommendation_acceptance_rate,
   current_timestamp() as dbt_updated_at
