@@ -8,6 +8,9 @@ Phase 5 connects the batch components created in Phases 2-4 into one production-
 GCS Sensors
     |
     v
+Replay Cleanup
+    |
+    v
 Dataflow Ingestion
     |
     v
@@ -32,6 +35,7 @@ The DAG uses:
 
 - `GCSObjectsWithPrefixExistenceSensor`
 - `BeamRunPythonPipelineOperator`
+- `BigQueryInsertJobOperator` for replay cleanup
 - `BigQueryCheckOperator`
 - `DataprocSubmitJobOperator`
 - `BashOperator` for dbt Core
@@ -136,7 +140,7 @@ For an explicit replay, trigger the DAG with:
 }
 ```
 
-Because curated tables use MERGE/SCD2 logic and records carry batch metadata, the pipeline is designed for replay-safe processing.
+Before reprocessing a batch, Composer removes prior stage/quarantine/audit rows for the same batch ID. Dataproc also clears prior work/reject rows for that batch. Curated dimensions/facts use SCD2/MERGE logic, so the workflow is designed for replay-safe processing.
 
 ## 8. Failure Behaviour
 
