@@ -23,7 +23,6 @@ returns as (
 products as (
   select *
   from {{ ref('stg_dim_product') }}
-  where is_current = true
 ),
 
 joined as (
