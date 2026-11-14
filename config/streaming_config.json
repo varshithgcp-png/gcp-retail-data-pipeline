@@ -1,0 +1,13 @@
+{
+  "project_id": "YOUR_PROJECT_ID",
+  "region": "us-central1",
+  "subscription": "projects/YOUR_PROJECT_ID/subscriptions/fitanalytics-recommendation-sub",
+  "dlq_topic": "projects/YOUR_PROJECT_ID/topics/fitanalytics-recommendation-dlq",
+  "output_table": "YOUR_PROJECT_ID:fitanalytics_streaming.recommendation_events",
+  "dlq_table": "YOUR_PROJECT_ID:fitanalytics_audit.streaming_dlq",
+  "window_metrics_table": "YOUR_PROJECT_ID:fitanalytics_streaming.recommendation_window_metrics",
+  "window_seconds": 300,
+  "allowed_lateness_seconds": 600,
+  "temp_location": "gs://YOUR_BUCKET/dataflow/streaming/temp",
+  "staging_location": "gs://YOUR_BUCKET/dataflow/streaming/staging"
+}
