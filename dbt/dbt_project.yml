@@ -13,7 +13,7 @@ models:
   fitanalytics_dbt:
     staging:
       +materialized: view
-      +schema: reporting_staging
+      +schema: fitanalytics_reporting
     marts:
       +materialized: table
-      +schema: reporting
+      +schema: fitanalytics_reporting
