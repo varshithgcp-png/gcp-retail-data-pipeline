@@ -1,0 +1,41 @@
+entities:
+  BRANCHES:
+    target_table: BRANCHES_bronze
+    primary_key: BranchID
+    columns: [BranchID, BranchName, City, Country, SortCodePrefix, Region]
+  CUSTOMERS:
+    target_table: CUSTOMERS_bronze
+    primary_key: CustomerID
+    columns: [CustomerID, FirstName, LastName, Email, Phone, DateOfBirth, City, Country, RiskRating, UpdatedAt]
+  EMPLOYEES:
+    target_table: EMPLOYEES_bronze
+    primary_key: EmployeeID
+    columns: [EmployeeID, BranchID, FirstName, LastName, Role, HireDate, Status]
+  ACCOUNTTYPES:
+    target_table: ACCOUNTTYPES_bronze
+    primary_key: AccountTypeID
+    columns: [AccountTypeID, AccountType, ProductCategory, MonthlyFee, InterestRate, OverdraftLimit]
+  ACCOUNTS:
+    target_table: ACCOUNTS_bronze
+    primary_key: AccountID
+    columns: [AccountID, CustomerID, AccountTypeID, BranchID, SortCode, AccountNumber, Currency, Balance, OpenDate, CloseDate, Status, UpdatedAt]
+  CARDS:
+    target_table: CARDS_bronze
+    primary_key: CardID
+    columns: [CardID, AccountID, CardType, Network, IssueDate, ExpiryDate, Status, ContactlessEnabled]
+  TRANSACTIONTYPES:
+    target_table: TRANSACTIONTYPES_bronze
+    primary_key: TransactionTypeID
+    columns: [TransactionTypeID, TransactionType, Category, Direction, IsCashProxy]
+  TRANSACTIONS:
+    target_table: TRANSACTIONS_bronze
+    primary_key: TransactionID
+    columns: [TransactionID, AccountID, TransactionTypeID, TransactionTs, Amount, Currency, Channel, MerchantCategory, Reference]
+  LOANS:
+    target_table: LOANS_bronze
+    primary_key: LoanID
+    columns: [LoanID, CustomerID, BranchID, LoanType, PrincipalAmount, InterestRate, StartDate, EndDate, Status]
+  LOANPAYMENTS:
+    target_table: LOANPAYMENTS_bronze
+    primary_key: PaymentID
+    columns: [PaymentID, LoanID, PaymentDate, DueDate, Amount, PaymentStatus]

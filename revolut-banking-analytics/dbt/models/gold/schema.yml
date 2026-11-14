@@ -1,0 +1,24 @@
+version: 2
+models:
+  - name: dim_customer
+    columns:
+      - name: customer_sk
+        tests: [not_null, unique]
+  - name: dim_account
+    columns:
+      - name: account_sk
+        tests: [not_null, unique]
+  - name: fact_transaction
+    description: One row per valid unique banking transaction.
+    columns:
+      - name: transaction_id
+        tests: [not_null, unique]
+      - name: customer_sk
+        tests: [not_null]
+      - name: account_sk
+        tests: [not_null]
+  - name: fact_loan_payment
+    description: One row per unique loan payment.
+    columns:
+      - name: payment_id
+        tests: [not_null, unique]

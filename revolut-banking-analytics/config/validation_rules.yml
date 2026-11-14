@@ -1,0 +1,46 @@
+rules:
+  - rule_id: CUST_DUP_001
+    entity: CUSTOMERS
+    rule_name: duplicate_customer_identity
+    severity: ERROR
+    treatment: DEDUPLICATE_AND_QUARANTINE_EVIDENCE
+  - rule_id: CUST_REQ_002
+    entity: CUSTOMERS
+    rule_name: missing_critical_customer_fields
+    severity: ERROR
+    treatment: QUARANTINE
+  - rule_id: TXN_DUP_001
+    entity: TRANSACTIONS
+    rule_name: exact_duplicate_transaction
+    severity: ERROR
+    treatment: SUPPRESS_AND_RETAIN_EVIDENCE
+  - rule_id: TXN_CUR_002
+    entity: TRANSACTIONS
+    rule_name: currency_mismatch
+    severity: WARN
+    treatment: FLAG
+  - rule_id: TXN_DATE_003
+    entity: TRANSACTIONS
+    rule_name: invalid_transaction_date
+    severity: ERROR
+    treatment: QUARANTINE
+  - rule_id: ACCT_SORT_001
+    entity: ACCOUNTS
+    rule_name: branch_sort_code_integrity
+    severity: WARN
+    treatment: FLAG
+  - rule_id: ACCT_OD_002
+    entity: ACCOUNTS
+    rule_name: negative_balance_beyond_overdraft
+    severity: WARN
+    treatment: FLAG
+  - rule_id: TXN_STRUCT_004
+    entity: TRANSACTIONS
+    rule_name: structuring_candidate
+    severity: WARN
+    treatment: FLAG_FOR_REVIEW
+  - rule_id: TXN_DORM_005
+    entity: TRANSACTIONS
+    rule_name: dormant_reactivation_burst
+    severity: WARN
+    treatment: FLAG_FOR_REVIEW

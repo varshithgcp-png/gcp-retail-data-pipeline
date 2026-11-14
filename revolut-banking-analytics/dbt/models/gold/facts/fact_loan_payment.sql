@@ -1,0 +1,2 @@
+{{ config(materialized='table', cluster_by=['customer_id','loan_id']) }}
+select p.payment_id,p.loan_id,l.customer_id,l.branch_id,p.payment_date,p.due_date,p.amount,p.payment_status,date_diff(p.payment_date,p.due_date,day) days_late,p.payment_status in ('LATE','OVERDUE') or p.payment_date>p.due_date is_repayment_risk,p.batch_id,p.source_file from {{ ref('slv_loan_payments') }} p join {{ ref('slv_loans') }} l using(loan_id)

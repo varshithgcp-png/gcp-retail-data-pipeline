@@ -1,0 +1,23 @@
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install pytest PyYAML dbt-bigquery
+      - run: python data/generate_day0.py
+      - run: python -m compileall banking_pipeline airflow data/generate_day0.py
+      - run: pytest -q tests
+      - name: dbt parse
+        working-directory: dbt
+        env:
+          DBT_BIGQUERY_PROJECT: ci-placeholder-project
+        run: |
+          mkdir -p .ci-profile
+          cp profiles.yml.example .ci-profile/profiles.yml
+          dbt parse --profiles-dir .ci-profile --no-partial-parse

@@ -1,0 +1,73 @@
+version: 2
+models:
+  - name: slv_customers
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]
+  - name: slv_accounts
+    columns:
+      - name: account_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('slv_customers')
+                field: customer_id
+  - name: slv_transactions
+    columns:
+      - name: transaction_id
+        tests: [not_null, unique]
+      - name: account_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('slv_accounts')
+                field: account_id
+  - name: slv_cards
+    columns:
+      - name: card_id
+        tests: [not_null, unique]
+      - name: account_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('slv_accounts')
+                field: account_id
+  - name: slv_loans
+    columns:
+      - name: loan_id
+        tests: [not_null, unique]
+      - name: customer_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('slv_customers')
+                field: customer_id
+      - name: branch_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('slv_branches')
+                field: branch_id
+  - name: slv_loan_payments
+    columns:
+      - name: payment_id
+        tests: [not_null, unique]
+      - name: loan_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('slv_loans')
+                field: loan_id
+  - name: slv_employees
+    columns:
+      - name: employee_id
+        tests: [not_null, unique]
+      - name: branch_id
+        tests:
+          - relationships:
+              arguments:
+                to: ref('slv_branches')
+                field: branch_id

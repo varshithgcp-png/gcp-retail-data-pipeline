@@ -1,0 +1,17 @@
+version: 2
+sources:
+  - name: bronze
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
+    schema: revolut_bronze
+    tables:
+      - name: BRANCHES_bronze
+      - name: CUSTOMERS_bronze
+      - name: EMPLOYEES_bronze
+      - name: ACCOUNTTYPES_bronze
+      - name: ACCOUNTS_bronze
+      - name: CARDS_bronze
+      - name: TRANSACTIONTYPES_bronze
+      - name: TRANSACTIONS_bronze
+      - name: LOANS_bronze
+      - name: LOANPAYMENTS_bronze
+      - name: CONTROL_TABLE_bronze

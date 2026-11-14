@@ -1,0 +1,2 @@
+{{ config(materialized='table') }}
+select l.loan_id,l.customer_id,l.branch_id,l.loan_type,l.principal_amount,l.status loan_status,count(p.payment_id) payment_count,countif(p.is_repayment_risk) risky_payment_count,max(p.days_late) max_days_late,case when l.status='OVERDUE' or countif(p.is_repayment_risk)>=2 then 'HIGH_RISK' when countif(p.is_repayment_risk)=1 then 'WATCH' else 'HEALTHY' end repayment_health from {{ ref('dim_loan') }} l left join {{ ref('fact_loan_payment') }} p using(loan_id) group by 1,2,3,4,5,6

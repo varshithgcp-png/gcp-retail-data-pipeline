@@ -1,0 +1,40 @@
+name: Revolut Banking CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "revolut-banking-analytics/**"
+      - ".github/workflows/revolut-banking-ci.yml"
+  pull_request:
+    paths:
+      - "revolut-banking-analytics/**"
+      - ".github/workflows/revolut-banking-ci.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: revolut-banking-analytics
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python -m pip install --upgrade pip
+      - run: pip install pytest PyYAML dbt-bigquery
+      - run: python data/generate_day0.py
+      - run: python -m compileall banking_pipeline airflow data/generate_day0.py
+      - run: pytest -q tests
+      - name: dbt parse
+        env:
+          DBT_BIGQUERY_PROJECT: ci-placeholder-project
+        run: |
+          mkdir -p dbt/.ci-profile
+          cp dbt/profiles.yml.example dbt/.ci-profile/profiles.yml
+          cd dbt
+          dbt parse --profiles-dir .ci-profile --no-partial-parse

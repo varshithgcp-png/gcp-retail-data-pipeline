@@ -1,0 +1,25 @@
+name: revolut_banking_analytics
+version: '1.0.0'
+config-version: 2
+profile: revolut_banking_analytics
+model-paths: ["models"]
+snapshot-paths: ["snapshots"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+vars:
+  suspicious_transaction_threshold: 100000
+  structuring_lower_bound: 9000
+  structuring_upper_bound: 10000
+  structuring_window_seconds: 3600
+  structuring_min_count: 3
+  inactive_months: 3
+models:
+  revolut_banking_analytics:
+    silver:
+      +schema: revolut_silver
+      +materialized: view
+      +tags: [silver]
+    gold:
+      +schema: revolut_gold
+      +tags: [gold]

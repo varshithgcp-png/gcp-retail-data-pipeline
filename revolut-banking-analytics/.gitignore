@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/profiles.yml
+*.json.key
+*service-account*.json
+data/EvalDB_Day0_Interleaved.txt
