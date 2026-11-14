@@ -15,7 +15,7 @@ Apache Beam / Dataflow
    +---- counts ------> fitanalytics_audit.pipeline_audit
 ```
 
-The same Python pipeline is reused for customer, product, purchase, return and recommendation files through metadata configuration.
+The same Python pipeline is reused for customer, product, purchase, return and recommendation files through metadata configuration. In Composer, file naming, extension, non-zero size and exact header are validated before this Dataflow pipeline starts.
 
 ## 1. Create BigQuery Datasets and Tables
 
@@ -32,11 +32,11 @@ Replace `PROJECT_ID` first.
 ```text
 gs://YOUR_BUCKET/
 ├── landing/
-│   ├── customer/
-│   ├── product/
-│   ├── purchase/
-│   ├── return/
-│   └── recommendation/
+│   ├── customer/business_date=YYYY-MM-DD/
+│   ├── product/business_date=YYYY-MM-DD/
+│   ├── purchase/business_date=YYYY-MM-DD/
+│   ├── return/business_date=YYYY-MM-DD/
+│   └── recommendation/business_date=YYYY-MM-DD/
 ├── archive/
 ├── quarantine/
 └── dataflow/
