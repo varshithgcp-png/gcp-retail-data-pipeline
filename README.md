@@ -161,7 +161,7 @@ The streaming flow demonstrates:
 
 - publisher-generated `event_id`
 - Pub/Sub source deduplication
-- validated event timestamps assigned before Beam windowing
+- Pub/Sub event-time timestamp attributes used for Dataflow watermarking
 - watermarks
 - fixed windows
 - allowed lateness
