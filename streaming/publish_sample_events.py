@@ -3,9 +3,18 @@
 import argparse
 import json
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from google.cloud import pubsub_v1
+
+
+def parse_ts(value):
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def format_ts(value):
+    return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def main():
@@ -21,20 +30,41 @@ def main():
         type=float,
         default=0.25,
     )
+    parser.add_argument(
+        "--preserve_event_times",
+        action="store_true",
+        help=(
+            "Keep timestamps from the JSONL file. By default, timestamps "
+            "are shifted so the first sample event occurs near current UTC."
+        ),
+    )
     args = parser.parse_args()
 
     topic_path = (
         f"projects/{args.project_id}/topics/{args.topic}"
     )
 
+    events = [
+        json.loads(line)
+        for line in Path(args.input_file).read_text().splitlines()
+        if line.strip()
+    ]
+
+    if not events:
+        raise ValueError("No sample events found")
+
+    if not args.preserve_event_times:
+        first_event_ts = parse_ts(events[0]["event_ts"])
+        shift = datetime.now(timezone.utc) - first_event_ts
+
+        for event in events:
+            event["event_ts"] = format_ts(
+                parse_ts(event["event_ts"]) + shift
+            )
+
     publisher = pubsub_v1.PublisherClient()
 
-    for line in Path(args.input_file).read_text().splitlines():
-        if not line.strip():
-            continue
-
-        event = json.loads(line)
-
+    for event in events:
         # Dataflow uses these attributes for logical-event dedupe
         # and event-time watermarking.
         attributes = {
@@ -50,6 +80,7 @@ def main():
 
         print(
             f"Published event_id={event['event_id']} "
+            f"event_ts={event['event_ts']} "
             f"message_id={future.result()}"
         )
 
