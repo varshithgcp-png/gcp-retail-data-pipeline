@@ -154,6 +154,9 @@ with DAG(
                     "quarantine_table": (
                         f"{PROJECT_ID}:fitanalytics_audit.quarantine_records"
                     ),
+                    "audit_table": (
+                        f"{PROJECT_ID}:fitanalytics_audit.pipeline_audit"
+                    ),
                     "batch_id": BATCH_ID,
                     "temp_location": (
                         f"gs://{GCS_BUCKET}/dataflow/temp"
@@ -182,9 +185,14 @@ with DAG(
             validate_stage = BigQueryCheckOperator(
                 task_id="validate_stage",
                 sql=f"""
-                    SELECT COUNT(*) > 0
-                    FROM `{PROJECT_ID}.fitanalytics_stage.{stage_table}`
-                    WHERE batch_id = '{BATCH_ID}'
+                    SELECT
+                      source_count = stage_count + rejected_count
+                      AND status = 'PROCESSED'
+                    FROM `{PROJECT_ID}.fitanalytics_audit.pipeline_audit`
+                    WHERE pipeline_name = 'fitanalytics_{entity}_ingestion'
+                      AND batch_id = '{BATCH_ID}'
+                    ORDER BY end_time DESC
+                    LIMIT 1
                 """,
                 use_legacy_sql=False,
                 location=BQ_LOCATION,
