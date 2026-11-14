@@ -1,0 +1,32 @@
+{
+  "project_id": "YOUR_PROJECT_ID",
+  "region": "us-central1",
+  "landing_bucket": "gs://YOUR_BUCKET/landing",
+  "archive_bucket": "gs://YOUR_BUCKET/archive",
+  "quarantine_bucket": "gs://YOUR_BUCKET/quarantine",
+  "temp_location": "gs://YOUR_BUCKET/dataflow/temp",
+  "staging_location": "gs://YOUR_BUCKET/dataflow/staging",
+  "quarantine_table": "YOUR_PROJECT_ID:fitanalytics_audit.quarantine_records",
+  "entities": {
+    "customer": {
+      "input": "customer/customer_*.csv",
+      "output_table": "YOUR_PROJECT_ID:fitanalytics_stage.stg_customer"
+    },
+    "product": {
+      "input": "product/product_*.csv",
+      "output_table": "YOUR_PROJECT_ID:fitanalytics_stage.stg_product"
+    },
+    "purchase": {
+      "input": "purchase/purchase_*.csv",
+      "output_table": "YOUR_PROJECT_ID:fitanalytics_stage.stg_purchase"
+    },
+    "return": {
+      "input": "return/return_*.csv",
+      "output_table": "YOUR_PROJECT_ID:fitanalytics_stage.stg_return"
+    },
+    "recommendation": {
+      "input": "recommendation/recommendation_*.csv",
+      "output_table": "YOUR_PROJECT_ID:fitanalytics_stage.stg_recommendation"
+    }
+  }
+}
