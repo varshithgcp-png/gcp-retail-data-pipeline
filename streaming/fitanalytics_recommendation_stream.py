@@ -123,10 +123,7 @@ class ParseValidateRecommendationFn(beam.DoFn):
             }
 
             self.valid_events.inc()
-            yield beam.window.TimestampedValue(
-                row,
-                event_dt.timestamp(),
-            )
+            yield row
 
         except Exception as exc:
             self.invalid_events.inc()
@@ -253,6 +250,7 @@ def run(argv=None):
                 subscription=known_args.subscription,
                 with_attributes=True,
                 id_label="event_id",
+                timestamp_attribute="event_ts",
             )
         )
 
