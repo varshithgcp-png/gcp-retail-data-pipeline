@@ -164,12 +164,29 @@ def main():
             entity_type=entity,
         )
 
-        valid_df, rejected_df = transform(
-            stage_df,
-            customer_dim,
-            product_dim,
-            args.batch_id,
-        )
+        if entity == "return":
+            purchase_fact = read_bigquery(
+                spark,
+                bq_table(
+                    args.project_id,
+                    "fitanalytics_curated",
+                    "fact_purchase",
+                ),
+            )
+            valid_df, rejected_df = transform(
+                stage_df,
+                customer_dim,
+                product_dim,
+                args.batch_id,
+                purchase_fact=purchase_fact,
+            )
+        else:
+            valid_df, rejected_df = transform(
+                stage_df,
+                customer_dim,
+                product_dim,
+                args.batch_id,
+            )
 
         write_bigquery(
             valid_df,
