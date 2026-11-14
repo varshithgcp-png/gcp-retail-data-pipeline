@@ -47,3 +47,13 @@ CREATE TABLE IF NOT EXISTS
 )
 PARTITION BY DATE(ingestion_ts)
 CLUSTER BY event_id;
+
+
+CREATE OR REPLACE VIEW
+`PROJECT_ID.fitanalytics_streaming.vw_recommendation_events_deduped` AS
+SELECT *
+FROM `PROJECT_ID.fitanalytics_streaming.recommendation_events`
+QUALIFY ROW_NUMBER() OVER (
+  PARTITION BY event_id
+  ORDER BY ingestion_ts DESC, pubsub_message_id DESC
+) = 1;
