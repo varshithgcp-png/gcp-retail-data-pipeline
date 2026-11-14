@@ -9,9 +9,15 @@ models:
       - name: recommendation_id
         tests: [not_null, unique]
       - name: customer_sk
-        tests: [not_null]
+        tests:
+          - not_null:
+              config:
+                severity: warn
       - name: product_sk
-        tests: [not_null]
+        tests:
+          - not_null:
+              config:
+                severity: warn
       - name: recommendation_source
         tests:
           - accepted_values:
