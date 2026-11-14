@@ -1,0 +1,4 @@
+return_id,purchase_id,product_id,return_reason,return_amount,return_date
+2001,1002,502,Size issue,2499.00,2026-11-05
+2002,1003,503,Damaged item,3999.00,2026-11-06
+2003,1004,504,Fit issue,5999.00,2026-11-07
