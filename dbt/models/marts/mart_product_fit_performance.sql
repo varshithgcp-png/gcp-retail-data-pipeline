@@ -9,20 +9,59 @@
   )
 }}
 
-with purchases as (
+with returns as (
   select *
-  from {{ ref('stg_fact_purchase') }}
+  from {{ ref('stg_fact_return') }}
+),
+
+recent_return_purchases as (
+  select distinct purchase_id
+  from returns
   {% if is_incremental() %}
-    where purchase_date >= date_sub(
-      (select coalesce(max(metric_date), date('1900-01-01')) from {{ this }}),
-      interval 7 day
+    where created_at >= timestamp_sub(
+      (
+        select coalesce(
+          max(dbt_updated_at),
+          timestamp('1970-01-01')
+        )
+        from {{ this }}
+      ),
+      interval 1 day
     )
   {% endif %}
 ),
 
-returns as (
+purchases as (
   select *
-  from {{ ref('stg_fact_return') }}
+  from {{ ref('stg_fact_purchase') }}
+  {% if is_incremental() %}
+    where purchase_date >= date_sub(
+      (
+        select coalesce(
+          max(metric_date),
+          date('1900-01-01')
+        )
+        from {{ this }}
+      ),
+      interval {{ var('return_lookback_days', 30) }} day
+    )
+    or purchase_id in (
+      select purchase_id from recent_return_purchases
+    )
+  {% endif %}
+),
+
+returns_by_purchase as (
+  select
+    purchase_id,
+    count(distinct return_id) as return_count,
+    count(distinct if(is_fit_related_return = 1, return_id, null))
+      as fit_return_count,
+    sum(
+      if(is_fit_related_return = 1, coalesce(return_amount, 0), 0)
+    ) as fit_return_value
+  from returns
+  group by purchase_id
 ),
 
 products as (
@@ -39,11 +78,11 @@ purchase_return as (
     p.amount,
     p.recommended_size,
     p.purchased_size,
-    r.return_id,
-    r.return_amount,
-    coalesce(r.is_fit_related_return, 0) as is_fit_related_return
+    coalesce(r.return_count, 0) as return_count,
+    coalesce(r.fit_return_count, 0) as fit_return_count,
+    coalesce(r.fit_return_value, 0) as fit_return_value
   from purchases p
-  left join returns r
+  left join returns_by_purchase r
     on p.purchase_id = r.purchase_id
 ),
 
@@ -54,12 +93,13 @@ aggregated as (
     dp.brand,
     dp.category,
     dp.fit_profile,
-    count(distinct pr.purchase_id) as purchase_count,
+    count(*) as purchase_count,
     sum(pr.amount) as gross_purchase_value,
-    count(distinct pr.return_id) as return_count,
-    count(distinct if(pr.is_fit_related_return = 1, pr.return_id, null)) as fit_return_count,
-    sum(if(pr.is_fit_related_return = 1, coalesce(pr.return_amount, 0), 0)) as fit_return_value,
-    count(distinct if(pr.recommended_size = pr.purchased_size, pr.purchase_id, null)) as recommendation_match_count
+    sum(pr.return_count) as return_count,
+    sum(pr.fit_return_count) as fit_return_count,
+    sum(pr.fit_return_value) as fit_return_value,
+    countif(pr.recommended_size = pr.purchased_size)
+      as recommendation_match_count
   from purchase_return pr
   join products dp
     on pr.product_sk = dp.product_sk
@@ -79,6 +119,7 @@ select
   fit_return_value,
   recommendation_match_count,
   {{ safe_rate('fit_return_count', 'purchase_count') }} as fit_related_return_rate,
-  {{ safe_rate('recommendation_match_count', 'purchase_count') }} as recommendation_acceptance_rate,
+  {{ safe_rate('recommendation_match_count', 'purchase_count') }}
+    as recommendation_acceptance_rate,
   current_timestamp() as dbt_updated_at
 from aggregated
