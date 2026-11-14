@@ -29,8 +29,8 @@ Dataflow Streaming
 
 - Pub/Sub subscription ingestion
 - stable `event_id` deduplication
-- validated event-time timestamps assigned with TimestampedValue
-- watermarks
+- Pub/Sub event-time timestamp attribute
+- Dataflow source watermarks
 - fixed windows
 - early/late triggers for monitoring metrics
 - allowed lateness
