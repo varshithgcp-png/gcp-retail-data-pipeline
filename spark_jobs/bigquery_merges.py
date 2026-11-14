@@ -30,6 +30,20 @@ WITH affected AS (
   FROM `{project}.fitanalytics_history.wrk_customer`
   WHERE batch_id = @batch_id
 ),
+timestamp_deduped AS (
+  SELECT * EXCEPT(_rn)
+  FROM (
+    SELECT
+      w.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY customer_id, updated_at
+        ORDER BY ingestion_ts DESC, batch_id DESC
+      ) AS _rn
+    FROM `{project}.fitanalytics_history.wrk_customer` w
+    JOIN affected a USING (customer_id)
+  )
+  WHERE _rn = 1
+),
 ordered_history AS (
   SELECT
     w.*,
@@ -37,8 +51,7 @@ ordered_history AS (
       PARTITION BY customer_id
       ORDER BY updated_at, ingestion_ts, batch_id
     ) AS previous_hash
-  FROM `{project}.fitanalytics_history.wrk_customer` w
-  JOIN affected a USING (customer_id)
+  FROM timestamp_deduped w
 ),
 changes AS (
   SELECT *
@@ -69,7 +82,7 @@ SELECT
   next_updated_at IS NULL,
   record_hash,
   batch_id,
-  CURRENT_TIMESTAMP()
+  ingestion_ts
 FROM versioned;
 
 COMMIT TRANSACTION;
@@ -108,6 +121,20 @@ WITH affected AS (
   FROM `{project}.fitanalytics_history.wrk_product`
   WHERE batch_id = @batch_id
 ),
+timestamp_deduped AS (
+  SELECT * EXCEPT(_rn)
+  FROM (
+    SELECT
+      w.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY product_id, updated_at
+        ORDER BY ingestion_ts DESC, batch_id DESC
+      ) AS _rn
+    FROM `{project}.fitanalytics_history.wrk_product` w
+    JOIN affected a USING (product_id)
+  )
+  WHERE _rn = 1
+),
 ordered_history AS (
   SELECT
     w.*,
@@ -115,8 +142,7 @@ ordered_history AS (
       PARTITION BY product_id
       ORDER BY updated_at, ingestion_ts, batch_id
     ) AS previous_hash
-  FROM `{project}.fitanalytics_history.wrk_product` w
-  JOIN affected a USING (product_id)
+  FROM timestamp_deduped w
 ),
 changes AS (
   SELECT *
@@ -150,7 +176,7 @@ SELECT
   next_updated_at IS NULL,
   record_hash,
   batch_id,
-  CURRENT_TIMESTAMP()
+  ingestion_ts
 FROM versioned;
 
 COMMIT TRANSACTION;
