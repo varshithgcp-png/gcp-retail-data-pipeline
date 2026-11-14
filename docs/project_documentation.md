@@ -78,7 +78,7 @@ Streaming design includes event ID deduplication, event-time processing, windowi
   - `stg_recommendation`
 
 - `fitanalytics_history`
-  - historical customer/product source changes
+  - retained transformation work history used to rebuild affected SCD2 keys
 
 - `fitanalytics_curated`
   - `dim_customer`
@@ -119,13 +119,14 @@ Streaming design includes event ID deduplication, event-time processing, windowi
 - valid size values
 - positive amounts
 - customer/product referential integrity
+- return-to-purchase referential integrity
 - duplicate business keys
 
 Invalid records are written to quarantine with the original row and error reason.
 
 ## Incremental Processing
 
-A watermark/control-table approach tracks the latest processed business timestamp. New or changed source records are loaded into stage tables and then merged to curated tables.
+Business-date folders and batch IDs drive the file-based portfolio ingestion. A watermark/control table records the latest successfully processed source timestamp so the same framework can support upstream incremental extraction from databases/APIs in a production implementation.
 
 Reruns are idempotent by using business keys, batch IDs and MERGE logic.
 
@@ -133,12 +134,12 @@ Reruns are idempotent by using business keys, batch IDs and MERGE logic.
 
 Customer and product dimensions preserve historical changes using:
 
-- effective_start_date
-- effective_end_date
+- effective_start_ts
+- effective_end_ts
 - is_current
 - record_hash
 
-A SHA-256 hash is generated from business attributes to detect changes.
+A SHA-256 hash is generated from business attributes to detect changes. For affected customer/product keys, SCD2 versions are rebuilt from retained work history ordered by source update timestamp, which supports controlled late/out-of-order dimension batches.
 
 ## Key KPIs
 
