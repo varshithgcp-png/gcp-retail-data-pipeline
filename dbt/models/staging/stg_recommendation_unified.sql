@@ -40,6 +40,15 @@ combined as (
   select * from batch_recommendations
   union all
   select * from streaming_recommendations
+),
+
+event_deduped as (
+  select *
+  from combined
+  qualify row_number() over (
+    partition by event_id
+    order by source_priority asc, recommendation_ts desc
+  ) = 1
 )
 
 select
@@ -53,8 +62,8 @@ select
   recommendation_ts,
   event_id,
   recommendation_source
-from combined
+from event_deduped
 qualify row_number() over (
-  partition by event_id
-  order by source_priority asc, recommendation_ts desc
+  partition by recommendation_id
+  order by source_priority asc, recommendation_ts desc, event_id desc
 ) = 1
