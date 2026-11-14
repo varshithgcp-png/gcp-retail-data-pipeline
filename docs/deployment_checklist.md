@@ -16,7 +16,9 @@ Use this before claiming the project has been executed end-to-end in GCP.
 
 - [ ] Create landing/archive/quarantine/temp/staging prefixes
 - [ ] Enable appropriate lifecycle policies
-- [ ] Upload sample batch files
+- [ ] Upload initial `data/customers.csv` as the first customer batch
+- [ ] Upload `data/customer_updates.csv` as a later customer batch to demonstrate SCD2
+- [ ] Upload purchase/return/recommendation samples to their business-date folders
 - [ ] Upload Dataproc driver and `spark_jobs.zip`
 
 ## Pub/Sub
@@ -42,7 +44,7 @@ Use this before claiming the project has been executed end-to-end in GCP.
 - [ ] Submit transformation driver
 - [ ] Verify SCD2 history
 - [ ] Verify fact MERGE results
-- [ ] Verify reconciliation audit
+- [ ] Verify reconciliation audit against `docs/expected_results.md`
 
 ## dbt
 
@@ -51,6 +53,7 @@ Use this before claiming the project has been executed end-to-end in GCP.
 - [ ] Run `dbt deps`
 - [ ] Run `dbt build`
 - [ ] Generate dbt docs
+- [ ] Verify unified batch + streaming recommendation staging
 - [ ] Verify reporting marts/views
 
 ## Cloud Composer
@@ -59,6 +62,7 @@ Use this before claiming the project has been executed end-to-end in GCP.
 - [ ] Configure environment variables
 - [ ] Upload DAG
 - [ ] Trigger manual test run
+- [ ] Confirm file validation catches bad header/name/empty-file cases
 - [ ] Test explicit backfill with business date + batch ID
 - [ ] Confirm files archive only after success
 
@@ -86,3 +90,5 @@ Capture screenshots only after the environment is genuinely running:
 - [ ] Fit KPI query output
 
 Do not present screenshots as production/client evidence. Label them as portfolio/synthetic GCP execution.
+
+After execution, compare the sample outputs with `docs/expected_results.md`.
