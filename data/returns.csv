@@ -1,4 +1,4 @@
-return_id,purchase_id,product_id,return_reason,return_amount,return_date
-2001,1002,502,Size issue,2499.00,2026-11-05
-2002,1003,503,Damaged item,3999.00,2026-11-06
-2003,1004,504,Fit issue,5999.00,2026-11-07
+return_id,purchase_id,customer_id,product_id,return_reason,fit_feedback,return_amount,return_date
+R2001,PU1002,C002,P502,SIZE_TOO_SMALL,RUNS_SMALL,89.99,2026-11-05
+R2002,PU1003,C003,P503,SIZE_TOO_LARGE,RUNS_LARGE,149.99,2026-11-06
+R2003,PU1004,C004,P504,OTHER,TRUE_TO_SIZE,119.99,2026-11-07
