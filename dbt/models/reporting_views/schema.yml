@@ -34,3 +34,12 @@ models:
         tests: [not_null]
       - name: category
         tests: [not_null]
+
+
+  - name: vw_unresolved_recommendations
+    description: "Recommendations waiting for customer/product SCD2 resolution; excluded from KPI marts until resolved."
+    columns:
+      - name: recommendation_id
+        tests: [not_null]
+      - name: event_id
+        tests: [not_null]
