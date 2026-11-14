@@ -1,0 +1,19 @@
+name: "fitanalytics_dbt"
+version: "1.0.0"
+config-version: 2
+
+profile: "fitanalytics_bigquery"
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  fitanalytics_dbt:
+    staging:
+      +materialized: view
+      +schema: reporting_staging
+    marts:
+      +materialized: table
+      +schema: reporting
