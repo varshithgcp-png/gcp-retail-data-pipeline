@@ -28,7 +28,6 @@ returns as (
 products as (
   select *
   from {{ ref('stg_dim_product') }}
-  where is_current = true
 ),
 
 purchase_return as (
@@ -36,6 +35,7 @@ purchase_return as (
     p.purchase_date as metric_date,
     p.purchase_id,
     p.product_id,
+    p.product_sk,
     p.amount,
     p.recommended_size,
     p.purchased_size,
@@ -62,7 +62,7 @@ aggregated as (
     countif(pr.recommended_size = pr.purchased_size) as recommendation_match_count
   from purchase_return pr
   join products dp
-    on pr.product_id = dp.product_id
+    on pr.product_sk = dp.product_sk
   group by 1,2,3,4,5
 )
 
