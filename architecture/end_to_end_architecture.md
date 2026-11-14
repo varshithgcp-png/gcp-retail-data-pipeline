@@ -24,6 +24,7 @@ flowchart LR
     B3 --> B6["5-min Event-Time Windows"]
     B6 --> B7["Streaming Metrics"]
     B4 --> B8["Deduplicated Consumer View"]
+    B8 --> A11
   end
 
   subgraph Control["Platform Controls"]
@@ -53,7 +54,7 @@ flowchart LR
 
 ## Streaming Path
 
-**Recommendation Event -> Pub/Sub -> Dataflow Streaming -> BigQuery -> Reporting**, with explicit DLQ routing, event-time windows, allowed lateness and source-level deduplication.
+**Recommendation Event -> Pub/Sub -> Dataflow Streaming -> BigQuery deduplicated view -> dbt unified recommendation model -> Reporting**, with explicit DLQ routing, event-time windows, allowed lateness and source-level deduplication.
 
 ## Data Layers
 
