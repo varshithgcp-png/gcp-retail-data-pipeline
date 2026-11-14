@@ -1,0 +1,4 @@
+# Add these PyPI packages to the Cloud Composer environment.
+# Airflow and Google provider packages are supplied by Composer.
+dbt-bigquery>=1.12.3,<1.13.0
+apache-beam[gcp]>=2.60.0,<3.0.0
