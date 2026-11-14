@@ -35,19 +35,46 @@ def _split_referential_integrity(
 
     if purchase_fact is not None and "purchase_id" in df.columns:
         purchases = (
-            purchase_fact.select("purchase_id")
-            .distinct()
+            purchase_fact.select(
+                "purchase_id",
+                F.col("customer_id").alias("_purchase_customer_id"),
+                F.col("product_id").alias("_purchase_product_id"),
+                F.col("purchase_date").alias("_purchase_date"),
+            )
+            .dropDuplicates(["purchase_id"])
             .withColumn("_purchase_exists", F.lit(True))
         )
         checked = checked.join(purchases, "purchase_id", "left")
     else:
-        checked = checked.withColumn("_purchase_exists", F.lit(True))
+        checked = (
+            checked
+            .withColumn("_purchase_exists", F.lit(True))
+            .withColumn("_purchase_customer_id", F.lit(None).cast("string"))
+            .withColumn("_purchase_product_id", F.lit(None).cast("string"))
+            .withColumn("_purchase_date", F.lit(None).cast("date"))
+        )
 
     checked = checked.withColumn(
         "_error_message",
         F.when(F.col("_customer_exists").isNull(), F.lit("Unknown customer_id"))
         .when(F.col("_product_exists").isNull(), F.lit("Unknown product_id"))
         .when(F.col("_purchase_exists").isNull(), F.lit("Unknown purchase_id"))
+        .when(
+            (F.col("_purchase_customer_id").isNotNull())
+            & (F.col("customer_id") != F.col("_purchase_customer_id")),
+            F.lit("Return customer_id does not match purchase"),
+        )
+        .when(
+            (F.col("_purchase_product_id").isNotNull())
+            & (F.col("product_id") != F.col("_purchase_product_id")),
+            F.lit("Return product_id does not match purchase"),
+        )
+        .when(
+            F.col("_purchase_date").isNotNull()
+            & F.col("return_date").isNotNull()
+            & (F.col("return_date") < F.col("_purchase_date")),
+            F.lit("return_date cannot be before purchase_date"),
+        )
         .otherwise(F.lit(None)),
     )
 
@@ -57,6 +84,9 @@ def _split_referential_integrity(
             "_customer_exists",
             "_product_exists",
             "_purchase_exists",
+            "_purchase_customer_id",
+            "_purchase_product_id",
+            "_purchase_date",
             "_error_message",
         )
     )
